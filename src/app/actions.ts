@@ -43,6 +43,7 @@ function sendCommandToRelay(host: string, port: number, command: string): Promis
     return new Promise((resolve, reject) => {
         const client = new net.Socket();
         const timeout = 5000;
+        let hasConnected = false;
 
         const timer = setTimeout(() => {
             client.destroy();
@@ -59,9 +60,13 @@ function sendCommandToRelay(host: string, port: number, command: string): Promis
         client.on('close', () => {
              console.log(`[Relay] Connection closed to ${host}:${port}`);
              clearTimeout(timer);
+             if (!hasConnected) {
+                reject(new Error(`Connection to ${host}:${port} failed`));
+             }
         });
 
         client.connect(port, host, () => {
+            hasConnected = true;
             console.log(`[Relay] Connected to ${host}:${port}`);
             console.log(`[Relay] Sending command: '${command}'`);
             client.write(command, (err) => {

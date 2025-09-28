@@ -4,7 +4,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
 
-export function Header() {
+export function Header({ title }: { title: string }) {
   const [currentDate, setCurrentDate] = useState('');
 
   useEffect(() => {
@@ -16,7 +16,7 @@ export function Header() {
       <SidebarTrigger className="md:hidden" />
       <div className="flex flex-col">
         <h1 className="text-2xl font-bold font-headline tracking-tight">
-          Welcome, Admin!
+          {title}
         </h1>
         <p className="text-sm text-muted-foreground">{currentDate}</p>
       </div>

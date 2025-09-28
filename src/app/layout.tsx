@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Logo } from '@/components/icons/Logo';
 import { Toaster } from "@/components/ui/toaster";
+import { SidebarLinks } from '@/components/layout/SidebarLinks';
 
 export const metadata: Metadata = {
   title: 'ParkPay Kiosk',
@@ -56,32 +57,7 @@ export default function RootLayout({
               </div>
             </SidebarHeader>
             <SidebarContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton href="#" isActive tooltip="Dashboard">
-                    <LayoutDashboard />
-                    <span>Dashboard</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton href="#" tooltip="Zones">
-                    <ParkingSquare />
-                    <span>Zones</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton href="#" tooltip="Reports">
-                    <BarChart3 />
-                    <span>Reports</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton href="#" tooltip="Settings">
-                    <Settings />
-                    <span>Settings</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
+              <SidebarLinks />
             </SidebarContent>
             <SidebarFooter>
               <div className="flex items-center gap-3">

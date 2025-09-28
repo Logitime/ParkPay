@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 'use server';
 import { predictOccupancy, PredictOccupancyInput, PredictOccupancyOutput } from "@/ai/flows/occupancy-prediction";
@@ -135,8 +134,8 @@ export async function readGateSensor(input: z.infer<typeof ReadInputActionSchema
     
     try {
         const response = await sendRelayCommand(host, port, 'input', true);
-        if (response.startsWith('input') && response.length === 13) {
-            const binaryData = response.substring(5); 
+        if (response.startsWith('input') && response.length >= 13) {
+            const binaryData = response.substring(5, 13); 
             return { success: true, data: binaryData, message: 'Successfully read gate sensor.' };
         }
         return { success: false, message: `Unexpected response from relay: ${response}` };

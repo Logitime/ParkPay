@@ -213,6 +213,7 @@ export function GateControl() {
   }) => {
     const config = statusConfig[status];
     const isEntry = name === 'Entry';
+    const isSensorError = (name === 'Entry' && pollFailures.current.entry >= MAX_FAILURES) || (name === 'Exit' && pollFailures.current.exit >= MAX_FAILURES);
 
     return (
       <div className="rounded-lg border p-4 space-y-4 bg-background">
@@ -220,11 +221,11 @@ export function GateControl() {
           <h3 className="font-semibold">{name} Gate</h3>
            <div className={cn(
                'flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-full', 
-               status === 'error' ? 'bg-destructive text-destructive-foreground' : 
+               isSensorError ? 'bg-destructive text-destructive-foreground' : 
                carDetected ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'
             )}>
                 <Car className="size-4" />
-                <span>{ status === 'error' ? 'Sensor Error' : carDetected ? 'Car Detected' : 'No Car'}</span>
+                <span>{ isSensorError ? 'Sensor Error' : carDetected ? 'Car Detected' : 'No Car'}</span>
             </div>
           <div
             className={cn(

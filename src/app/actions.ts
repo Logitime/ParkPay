@@ -40,40 +40,41 @@ function sendRelayCommand(host: string, port: number, command: string, waitForRe
         const timeout = 5000; // 5-second timeout
 
         const timer = setTimeout(() => {
-            reject(new Error('Relay command timed out'));
             client.destroy();
+            reject(new Error('Relay command timed out'));
         }, timeout);
+
+        client.on('error', (err) => {
+            clearTimeout(timer);
+            client.destroy();
+            reject(err);
+        });
+
+        client.on('close', () => {
+            clearTimeout(timer);
+        });
 
         client.connect(port, host, () => {
             console.log(`Connected to relay at ${host}:${port}`);
-            client.write(command);
-            if (!waitForResponse) {
-                clearTimeout(timer);
-                client.end();
-                resolve("Command sent");
-            }
+            client.write(command, (err) => {
+                if (err) {
+                    return reject(err);
+                }
+                if (!waitForResponse) {
+                    client.end();
+                    resolve("Command sent");
+                }
+            });
         });
 
         if (waitForResponse) {
             client.on('data', (data) => {
                 const response = data.toString().trim();
                 console.log(`Received from relay: ${response}`);
-                clearTimeout(timer);
                 client.end();
                 resolve(response);
             });
         }
-
-        client.on('error', (err) => {
-            console.error(`Relay connection error: ${err.message}`);
-            clearTimeout(timer);
-            reject(err);
-        });
-
-        client.on('close', () => {
-            console.log('Connection to relay closed');
-            clearTimeout(timer);
-        });
     });
 }
 
@@ -94,10 +95,11 @@ export async function controlGate(input: z.infer<typeof GateActionSchema>): Prom
     const command = `all${commandString.join('')}`;
     
     try {
-        const response = await sendRelayCommand(host, port, command, false); // Don't wait for a response
-        return { success: true, message: `Gate ${action} command sent. Relay response: ${response}` };
+        const response = await sendRelayCommand(host, port, command, false);
+        return { success: true, message: `Gate ${action} command sent successfully.` };
     } catch (e) {
         const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
+        console.error(`Failed to control gate: ${errorMessage}`);
         return { success: false, message: `Failed to control gate: ${errorMessage}` };
     }
 }
@@ -116,16 +118,17 @@ export async function readGateSensor(input: z.infer<typeof ReadInputActionSchema
     const { host, port } = validatedInput.data;
     
     try {
-        const response = await sendRelayCommand(host, port, 'input', true); // Wait for a response
-        // Expected response is 'input' followed by an 8-digit binary string, e.g., 'input00000001'
+        const response = await sendRelayCommand(host, port, 'input', true);
         if (response.startsWith('input') && response.length === 13) {
-            const binaryData = response.substring(5); // Extract the 8-digit binary string
+            const binaryData = response.substring(5); 
             return { success: true, data: binaryData, message: 'Successfully read gate sensor.' };
         }
         return { success: false, message: `Unexpected response from relay: ${response}` };
 
     } catch (e) {
         const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
+        console.error(`Failed to read gate sensor: ${errorMessage}`);
         return { success: false, message: `Failed to read gate sensor: ${errorMessage}` };
     }
 }
+

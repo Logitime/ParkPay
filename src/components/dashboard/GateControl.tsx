@@ -131,12 +131,13 @@ export function GateControl() {
   };
 
   useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
     const pollSensors = async () => {
       // Poll entry gate
       try {
         const entryResponse = await readGateSensor({ host: gateSettings.entryGateIp, port: gateSettings.entryGatePort });
         if (entryResponse.success && entryResponse.data) {
-          // The relay returns '1' when the input is active (car detected)
           const isCarPresent = entryResponse.data[gateSettings.entryGateInput - 1] === '1';
           setCarAtEntry(isCarPresent);
         } else if (!entryResponse.success) {
@@ -161,9 +162,15 @@ export function GateControl() {
     };
     
     if (isPolling) {
-        const intervalId = setInterval(pollSensors, 2000); // Poll every 2 seconds
-        return () => clearInterval(intervalId);
+        pollSensors(); // Run once immediately
+        intervalId = setInterval(pollSensors, 2000); // Then poll every 2 seconds
     }
+    
+    return () => {
+        if (intervalId) {
+            clearInterval(intervalId);
+        }
+    };
   }, [isPolling]);
 
 

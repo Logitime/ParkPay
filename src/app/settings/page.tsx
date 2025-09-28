@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Car, DollarSign, ParkingSquare, Settings, User, KeyRound, QrCode, Printer } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 type Zone = {
     id: number;
@@ -83,6 +84,7 @@ export default function SettingsPage() {
     ]);
     const [newTariffName, setNewTariffName] = useState("");
     const [newTariffRate, setNewTariffRate] = useState("");
+    const [editingTariff, setEditingTariff] = useState<Tariff | null>(null);
 
     // Cashier Settings State
     const [cashiers, setCashiers] = useState<Cashier[]>([
@@ -162,6 +164,27 @@ export default function SettingsPage() {
                 title: "New Tariff Added",
                 description: `Tariff "${newTariffName}" has been created.`,
             });
+        }
+    };
+
+    const handleEditTariff = (tariff: Tariff) => {
+        setEditingTariff({...tariff});
+    };
+
+    const handleTariffChange = (field: keyof Tariff, value: string) => {
+        if (editingTariff) {
+            setEditingTariff({ ...editingTariff, [field]: value });
+        }
+    };
+
+    const handleUpdateTariff = () => {
+        if (editingTariff) {
+            setTariffs(tariffs.map(t => t.id === editingTariff.id ? editingTariff : t));
+            toast({
+                title: "Tariff Updated",
+                description: `Tariff "${editingTariff.name}" has been updated.`,
+            });
+            setEditingTariff(null);
         }
     };
     
@@ -364,7 +387,11 @@ export default function SettingsPage() {
                                         </div>
                                         <div className="flex items-center gap-2 flex-shrink-0">
                                             <span className="text-lg font-semibold min-w-[80px] text-right">{tariff.rate}</span>
-                                            <Button variant="outline" size="sm">Edit</Button>
+                                            <Dialog>
+                                                <DialogTrigger asChild>
+                                                    <Button variant="outline" size="sm" onClick={() => handleEditTariff(tariff)}>Edit</Button>
+                                                </DialogTrigger>
+                                            </Dialog>
                                         </div>
                                     </div>
                                 ))}
@@ -501,9 +528,45 @@ export default function SettingsPage() {
                         </Card>
                     </TabsContent>
                 </Tabs>
+                {editingTariff && (
+                    <Dialog open={!!editingTariff} onOpenChange={(open) => !open && setEditingTariff(null)}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Edit Tariff</DialogTitle>
+                                <DialogDescription>
+                                    Update the details for the tariff.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="edit-tariff-name" className="text-right">Name</Label>
+                                    <Input id="edit-tariff-name" value={editingTariff.name} onChange={(e) => handleTariffChange('name', e.target.value)} className="col-span-3" />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="edit-tariff-desc" className="text-right">Description</Label>
+                                    <Textarea id="edit-tariff-desc" value={editingTariff.description} onChange={(e) => handleTariffChange('description', e.target.value)} className="col-span-3" />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="edit-tariff-rate" className="text-right">Rate</Label>
+                                    <Input id="edit-tariff-rate" value={editingTariff.rate} onChange={(e) => handleTariffChange('rate', e.target.value)} className="col-span-3" />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button variant="outline" onClick={() => setEditingTariff(null)}>Cancel</Button>
+                                </DialogClose>
+                                <DialogClose asChild>
+                                    <Button type="button" onClick={handleUpdateTariff}>Save Changes</Button>
+                                </DialogClose>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                )}
             </main>
         </div>
     )
 }
+
+    
 
     

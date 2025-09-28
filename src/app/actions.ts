@@ -81,7 +81,6 @@ function readFromRelay(host: string, port: number, command: string): Promise<str
     return new Promise((resolve, reject) => {
         const client = new net.Socket();
         const timeout = 5000;
-        let connected = false;
         let hasResolved = false;
 
         const timer = setTimeout(() => {
@@ -111,7 +110,6 @@ function readFromRelay(host: string, port: number, command: string): Promise<str
         });
 
         client.connect(port, host, () => {
-            connected = true;
             console.log(`[Relay Read] Connected to ${host}:${port}`);
             console.log(`[Relay Read] Sending command: '${command}'`);
             client.write(command, (err) => {

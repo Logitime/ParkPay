@@ -161,7 +161,7 @@ export default function SettingsPage() {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="admin">Admin</SelectItem>
-                                            <SelectItem value="editor">Cashier</`SelectItem>
+                                            <SelectItem value="editor">Cashier</SelectItem>
                                             <SelectItem value="viewer">Viewer</SelectItem>
                                         </SelectContent>
                                     </Select>
@@ -182,7 +182,7 @@ export default function SettingsPage() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <Button>Add New Cashier</Button>
+                                <Button>Add New Cashier</Button>                            
                             </CardContent>
                         </Card>
                     </TabsContent>

@@ -1,3 +1,4 @@
+
 // @ts-nocheck
 'use server';
 import { predictOccupancy, PredictOccupancyInput, PredictOccupancyOutput } from "@/ai/flows/occupancy-prediction";
@@ -33,35 +34,46 @@ const GateActionSchema = z.object({
   action: z.enum(['open', 'close']),
 });
 
-function sendRelayCommand(host: string, port: number, command: string): Promise<string> {
+function sendRelayCommand(host: string, port: number, command: string, waitForResponse: boolean = true): Promise<string> {
     return new Promise((resolve, reject) => {
         const client = new net.Socket();
-        
+        const timeout = 5000; // 5-second timeout
+
+        const timer = setTimeout(() => {
+            reject(new Error('Relay command timed out'));
+            client.destroy();
+        }, timeout);
+
         client.connect(port, host, () => {
             console.log(`Connected to relay at ${host}:${port}`);
             client.write(command);
+            if (!waitForResponse) {
+                clearTimeout(timer);
+                client.end();
+                resolve("Command sent");
+            }
         });
 
-        client.on('data', (data) => {
-            const response = data.toString().trim();
-            console.log(`Received from relay: ${response}`);
-            client.end();
-            resolve(response);
-        });
+        if (waitForResponse) {
+            client.on('data', (data) => {
+                const response = data.toString().trim();
+                console.log(`Received from relay: ${response}`);
+                clearTimeout(timer);
+                client.end();
+                resolve(response);
+            });
+        }
 
         client.on('error', (err) => {
             console.error(`Relay connection error: ${err.message}`);
+            clearTimeout(timer);
             reject(err);
         });
 
         client.on('close', () => {
             console.log('Connection to relay closed');
+            clearTimeout(timer);
         });
-
-        setTimeout(() => {
-            reject(new Error('Relay command timed out'));
-            client.destroy();
-        }, 5000); // 5-second timeout
     });
 }
 
@@ -82,7 +94,7 @@ export async function controlGate(input: z.infer<typeof GateActionSchema>): Prom
     const command = `all${commandString.join('')}`;
     
     try {
-        const response = await sendRelayCommand(host, port, command);
+        const response = await sendRelayCommand(host, port, command, false); // Don't wait for a response
         return { success: true, message: `Gate ${action} command sent. Relay response: ${response}` };
     } catch (e) {
         const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
@@ -104,7 +116,7 @@ export async function readGateSensor(input: z.infer<typeof ReadInputActionSchema
     const { host, port } = validatedInput.data;
     
     try {
-        const response = await sendRelayCommand(host, port, 'input');
+        const response = await sendRelayCommand(host, port, 'input', true); // Wait for a response
         // Assuming the response is a binary string like '11110000'
         return { success: true, data: response, message: 'Successfully read gate sensor.' };
     } catch (e) {

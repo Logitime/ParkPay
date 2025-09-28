@@ -37,9 +37,11 @@ function sendRelayCommand(host: string, port: number, command: string, waitForRe
     return new Promise((resolve, reject) => {
         const client = new net.Socket();
         const timeout = 5000; // 5-second timeout
+        let hasTimedOut = false;
         console.log(`[Relay] Attempting to connect to ${host}:${port}`);
 
         const timer = setTimeout(() => {
+            hasTimedOut = true;
             const errorMsg = `Connection to ${host}:${port} timed out.`;
             console.error(`[Relay] ${errorMsg}`);
             client.destroy();
@@ -47,6 +49,7 @@ function sendRelayCommand(host: string, port: number, command: string, waitForRe
         }, timeout);
 
         client.on('error', (err) => {
+            if (hasTimedOut) return;
             console.error(`[Relay] Connection error to ${host}:${port}:`, err.message);
             clearTimeout(timer);
             client.destroy();
@@ -54,15 +57,18 @@ function sendRelayCommand(host: string, port: number, command: string, waitForRe
         });
 
         client.on('close', () => {
+             if (hasTimedOut) return;
             console.log(`[Relay] Connection closed to ${host}:${port}`);
             clearTimeout(timer);
         });
 
         client.connect(port, host, () => {
+            if (hasTimedOut) return;
             console.log(`[Relay] Connected to ${host}:${port}`);
             console.log(`[Relay] Sending command: '${command}'`);
             client.write(command, (err) => {
                 if (err) {
+                    if (hasTimedOut) return;
                     console.error(`[Relay] Error writing command:`, err);
                     clearTimeout(timer);
                     client.destroy();
@@ -71,6 +77,7 @@ function sendRelayCommand(host: string, port: number, command: string, waitForRe
                 console.log(`[Relay] Command sent successfully.`);
                 if (!waitForResponse) {
                     client.end(() => {
+                        if (hasTimedOut) return;
                         console.log('[Relay] Closing connection as no response is expected.');
                         clearTimeout(timer);
                         resolve("Command sent");
@@ -81,9 +88,11 @@ function sendRelayCommand(host: string, port: number, command: string, waitForRe
 
         if (waitForResponse) {
             client.on('data', (data) => {
+                if (hasTimedOut) return;
                 const response = data.toString().trim();
                 console.log(`[Relay] Received from relay: '${response}'`);
                 client.end(() => {
+                   if (hasTimedOut) return;
                    console.log('[Relay] Closing connection after receiving data.');
                    clearTimeout(timer);
                    resolve(response);

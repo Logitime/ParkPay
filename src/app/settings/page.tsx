@@ -32,6 +32,15 @@ type Tariff = {
     rate: number;
 }
 
+type Gate = {
+    id: number;
+    name: string;
+    ip: string;
+    port: string;
+    input: string;
+    output: string;
+}
+
 export default function SettingsPage() {
     const { toast } = useToast();
 
@@ -40,15 +49,13 @@ export default function SettingsPage() {
     const [emailNotifications, setEmailNotifications] = useState(true);
 
     // Gate Settings State
-    const [entryGateIp, setEntryGateIp] = useState("10.0.0.185");
-    const [entryGatePort, setEntryGatePort] = useState("5000");
-    const [entryGateInput, setEntryGateInput] = useState("1");
-    const [entryGateOutput, setEntryGateOutput] = useState("1");
-    const [exitGateIp, setExitGateIp] = useState("192.168.1.11");
-    const [exitGatePort, setExitGatePort] = useState("5000");
-    const [exitGateInput, setExitGateInput] = useState("2");
-    const [exitGateOutput, setExitGateOutput] = useState("2");
+    const [gates, setGates] = useState<Gate[]>([
+        { id: 1, name: "Entry Gate", ip: "10.0.0.185", port: "5000", input: "1", output: "1" },
+        { id: 2, name: "Exit Gate", ip: "192.168.1.11", port: "5000", input: "2", output: "2" },
+    ]);
     const [autoOpen, setAutoOpen] = useState(true);
+    const [newGateName, setNewGateName] = useState("");
+    const [newGateIp, setNewGateIp] = useState("");
 
     // Zone Settings State
     const [zones, setZones] = useState<Zone[]>([
@@ -82,6 +89,30 @@ export default function SettingsPage() {
             title: "Settings Saved",
             description: `${section} settings have been successfully saved.`,
         });
+    };
+
+    const handleAddNewGate = () => {
+        if (newGateName && newGateIp) {
+            const newGate: Gate = {
+                id: Date.now(),
+                name: newGateName,
+                ip: newGateIp,
+                port: '5000',
+                input: (gates.length + 1).toString(),
+                output: (gates.length + 1).toString(),
+            };
+            setGates([...gates, newGate]);
+            setNewGateName("");
+            setNewGateIp("");
+            toast({
+                title: "New Gate Added",
+                description: `Gate "${newGateName}" has been created.`,
+            });
+        }
+    };
+
+    const handleGateChange = (id: number, field: keyof Gate, value: string) => {
+        setGates(gates.map(gate => gate.id === id ? { ...gate, [field]: value } : gate));
     };
 
     const handleAddNewZone = () => {
@@ -175,50 +206,31 @@ export default function SettingsPage() {
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <Card className="p-4">
-                                        <h3 className="text-lg font-semibold mb-4">Entry Gate</h3>
-                                        <div className="space-y-4">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="entry-gate-ip">Relay IP Address</Label>
-                                                <Input id="entry-gate-ip" value={entryGateIp} onChange={(e) => setEntryGateIp(e.target.value)} placeholder="192.168.1.10" />
+                                    {gates.map(gate => (
+                                        <Card key={gate.id} className="p-4">
+                                            <h3 className="text-lg font-semibold mb-4">{gate.name}</h3>
+                                            <div className="space-y-4">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor={`gate-ip-${gate.id}`}>Relay IP Address</Label>
+                                                    <Input id={`gate-ip-${gate.id}`} value={gate.ip} onChange={(e) => handleGateChange(gate.id, 'ip', e.target.value)} placeholder="192.168.1.10" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor={`gate-port-${gate.id}`}>Network Port</Label>
+                                                    <Input id={`gate-port-${gate.id}`} type="number" value={gate.port} onChange={(e) => handleGateChange(gate.id, 'port', e.target.value)} placeholder="5000" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor={`gate-input-${gate.id}`}>Car Detect Port (Input)</Label>
+                                                    <Input id={`gate-input-${gate.id}`} type="number" value={gate.input} onChange={(e) => handleGateChange(gate.id, 'input', e.target.value)} placeholder="1" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor={`gate-output-${gate.id}`}>Open Gate Port (Output)</Label>
+                                                    <Input id={`gate-output-${gate.id}`} type="number" value={gate.output} onChange={(e) => handleGateChange(gate.id, 'output', e.target.value)} placeholder="1" />
+                                                </div>
                                             </div>
-                                             <div className="space-y-2">
-                                                <Label htmlFor="entry-gate-port">Network Port</Label>
-                                                <Input id="entry-gate-port" type="number" value={entryGatePort} onChange={(e) => setEntryGatePort(e.target.value)} placeholder="5000" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="entry-gate-input">Car Detect Port (Input)</Label>
-                                                <Input id="entry-gate-input" type="number" value={entryGateInput} onChange={(e) => setEntryGateInput(e.target.value)} placeholder="1" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="entry-gate-output">Open Gate Port (Output)</Label>
-                                                <Input id="entry-gate-output" type="number" value={entryGateOutput} onChange={(e) => setEntryGateOutput(e.target.value)} placeholder="1" />
-                                            </div>
-                                        </div>
-                                    </Card>
-                                    <Card className="p-4">
-                                        <h3 className="text-lg font-semibold mb-4">Exit Gate</h3>
-                                         <div className="space-y-4">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="exit-gate-ip">Relay IP Address</Label>
-                                                <Input id="exit-gate-ip" value={exitGateIp} onChange={(e) => setExitGateIp(e.target.value)} placeholder="192.168.1.11" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="exit-gate-port">Network Port</Label>
-                                                <Input id="exit-gate-port" type="number" value={exitGatePort} onChange={(e) => setExitGatePort(e.target.value)} placeholder="5000" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="exit-gate-input">Car Detect Port (Input)</Label>
-                                                <Input id="exit-gate-input" type="number" value={exitGateInput} onChange={(e) => setExitGateInput(e.target.value)} placeholder="2" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="exit-gate-output">Open Gate Port (Output)</Label>
-                                                <Input id="exit-gate-output" type="number" value={exitGateOutput} onChange={(e) => setExitGateOutput(e.target.value)} placeholder="2" />
-                                            </div>
-                                        </div>
-                                    </Card>
+                                        </Card>
+                                    ))}
                                 </div>
-                                <div className="flex items-center justify-between space-x-2 p-4 border rounded-lg">
+                                <div className="flex items-center justify-between space-x-2 p-4 border rounded-lg mt-6">
                                     <div className="space-y-0.5">
                                         <Label htmlFor="auto-open">Automatic Opening</Label>
                                         <p className="text-xs text-muted-foreground">
@@ -228,8 +240,36 @@ export default function SettingsPage() {
                                     <Switch id="auto-open" checked={autoOpen} onCheckedChange={setAutoOpen} />
                                 </div>
                             </CardContent>
-                             <CardContent>
-                                <Button onClick={() => handleSaveChanges('Gate')}>Save Gate Settings</Button>
+                             <CardContent className="flex flex-col items-start gap-4">
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline">Add New Gate</Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Add New Gate</DialogTitle>
+                                            <DialogDescription>
+                                                Enter the details for the new gate.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid gap-4 py-4">
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="gate-name" className="text-right">Name</Label>
+                                                <Input id="gate-name" value={newGateName} onChange={(e) => setNewGateName(e.target.value)} className="col-span-3" placeholder="e.g., Garage P2 Entry" />
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="gate-ip-new" className="text-right">IP Address</Label>
+                                                <Input id="gate-ip-new" value={newGateIp} onChange={(e) => setNewGateIp(e.target.value)} className="col-span-3" placeholder="192.168.1.12" />
+                                            </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <DialogClose asChild>
+                                                <Button type="button" onClick={handleAddNewGate}>Add Gate</Button>
+                                            </DialogClose>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                                <Button onClick={() => handleSaveChanges('Gate')}>Save All Gate Settings</Button>
                             </CardContent>
                         </Card>
                     </TabsContent>

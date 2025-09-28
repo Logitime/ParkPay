@@ -1,5 +1,7 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { controlGate, readGateSensor } from '@/app/actions';
+import { useToast } from "@/hooks/use-toast";
 import {
   Card,
   CardContent,
@@ -32,7 +34,19 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
-type GateStatus = 'open' | 'closed' | 'moving' | 'obstacle';
+// This is a mock for settings until we fetch them from a persistent store
+const gateSettings = {
+    entryGateIp: "10.0.0.185",
+    entryGatePort: 5000,
+    entryGateInput: 1,
+    entryGateOutput: 1,
+    exitGateIp: "192.168.1.11",
+    exitGatePort: 5000,
+    exitGateInput: 2,
+    exitGateOutput: 2,
+};
+
+type GateStatus = 'open' | 'closed' | 'moving' | 'obstacle' | 'error';
 
 const statusConfig: Record<
   GateStatus,
@@ -55,6 +69,11 @@ const statusConfig: Record<
   },
   obstacle: {
     text: 'Obstacle!',
+    color: 'bg-orange-500',
+    icon: <TriangleAlert className="size-4" />,
+  },
+   error: {
+    text: 'Error',
     color: 'bg-destructive',
     icon: <TriangleAlert className="size-4" />,
   },
@@ -63,46 +82,95 @@ const statusConfig: Record<
 export function GateControl() {
   const [entryGateStatus, setEntryGateStatus] = useState<GateStatus>('closed');
   const [exitGateStatus, setExitGateStatus] = useState<GateStatus>('closed');
-  const [obstacle, setObstacle] = useState(false);
+  const [carAtEntry, setCarAtEntry] = useState(false);
+  const [carAtExit, setCarAtExit] = useState(false);
+  const [isPolling, setIsPolling] = useState(false);
+  const { toast } = useToast();
 
-  const handleGateAction = (
+  const handleGateAction = async (
     gate: 'entry' | 'exit',
     action: 'open' | 'close'
   ) => {
     const setStatus = gate === 'entry' ? setEntryGateStatus : setExitGateStatus;
     const currentStatus = gate === 'entry' ? entryGateStatus : exitGateStatus;
 
-    if (currentStatus === 'moving' || currentStatus === 'obstacle') return;
+    if (currentStatus === 'moving') return;
 
     setStatus('moving');
-    setTimeout(() => {
-      if (obstacle) {
-        setStatus('obstacle');
-      } else {
-        setStatus(action === 'open' ? 'open' : 'closed');
-      }
-    }, 1500);
-  };
-  
-  const handleObstacleToggle = (checked: boolean) => {
-    setObstacle(checked);
-    if(checked) {
-      if(entryGateStatus === 'moving') setEntryGateStatus('obstacle');
-      if(exitGateStatus === 'moving') setExitGateStatus('obstacle');
+
+    const settings = gate === 'entry' ? {
+        host: gateSettings.entryGateIp,
+        port: gateSettings.entryGatePort,
+        output: gateSettings.entryGateOutput,
+    } : {
+        host: gateSettings.exitGateIp,
+        port: gateSettings.exitGatePort,
+        output: gateSettings.exitGateOutput,
+    };
+    
+    const { success, message } = await controlGate({ ...settings, action });
+
+    if (success) {
+        // Simulate gate movement time
+        setTimeout(() => {
+             setStatus(action === 'open' ? 'open' : 'closed');
+        }, 2000);
+        toast({
+            title: `Gate Action: ${gate}`,
+            description: message,
+        });
     } else {
-      if(entryGateStatus === 'obstacle') setEntryGateStatus('closed');
-      if(exitGateStatus === 'obstacle') setExitGateStatus('closed');
+        setStatus('error');
+        toast({
+            variant: 'destructive',
+            title: `Gate Action Failed: ${gate}`,
+            description: message,
+        });
     }
-  }
+  };
+
+  useEffect(() => {
+    const pollSensors = async () => {
+      // Poll entry gate
+      try {
+        const entryResponse = await readGateSensor({ host: gateSettings.entryGateIp, port: gateSettings.entryGatePort });
+        if (entryResponse.success && entryResponse.data) {
+          const isCarPresent = entryResponse.data[gateSettings.entryGateInput - 1] === '0'; // Assuming '0' means detected
+          setCarAtEntry(isCarPresent);
+        }
+      } catch (error) {
+        console.error("Error polling entry gate sensor:", error);
+      }
+      
+      // Poll exit gate
+      try {
+        const exitResponse = await readGateSensor({ host: gateSettings.exitGateIp, port: gateSettings.exitGatePort });
+        if (exitResponse.success && exitResponse.data) {
+          const isCarPresent = exitResponse.data[gateSettings.exitGateInput - 1] === '0';
+          setCarAtExit(isCarPresent);
+        }
+      } catch (error) {
+        console.error("Error polling exit gate sensor:", error);
+      }
+    };
+    
+    if (isPolling) {
+        const intervalId = setInterval(pollSensors, 2000); // Poll every 2 seconds
+        return () => clearInterval(intervalId);
+    }
+  }, [isPolling]);
+
 
   const Gate = ({
     name,
     status,
+    carDetected,
     onOpen,
     onClose,
   }: {
     name: 'Entry' | 'Exit';
     status: GateStatus;
+    carDetected: boolean;
     onOpen: () => void;
     onClose: () => void;
   }) => {
@@ -113,6 +181,10 @@ export function GateControl() {
       <div className="rounded-lg border p-4 space-y-4 bg-background">
         <div className="flex justify-between items-center">
           <h3 className="font-semibold">{name} Gate</h3>
+           <div className={`flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-full ${carDetected ? 'bg-yellow-400 text-yellow-900' : 'bg-gray-200 text-gray-600'}`}>
+                <Car className="size-4" />
+                <span>{carDetected ? 'Car Detected' : 'No Car'}</span>
+            </div>
           <div
             className={cn(
               'flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-full text-white',
@@ -126,7 +198,7 @@ export function GateControl() {
         <div className="flex gap-2">
           <Button
             onClick={onOpen}
-            disabled={status === 'open' || status === 'moving' || status === 'obstacle'}
+            disabled={status === 'open' || status === 'moving'}
             className="w-full"
             variant="outline"
           >
@@ -134,7 +206,7 @@ export function GateControl() {
           </Button>
           <Button
             onClick={onClose}
-            disabled={status === 'closed' || status === 'moving' || status === 'obstacle'}
+            disabled={status === 'closed' || status === 'moving'}
             className="w-full"
             variant="outline"
           >
@@ -145,7 +217,7 @@ export function GateControl() {
           {isEntry ? (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button className="w-full" variant="secondary">
+                <Button className="w-full" variant="secondary" disabled={!carDetected}>
                   <Ticket className="mr-2 size-4" /> Issue Ticket
                 </Button>
               </AlertDialogTrigger>
@@ -199,20 +271,21 @@ export function GateControl() {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex items-center space-x-2 rounded-lg border p-3 bg-muted/50">
-          <TriangleAlert className="size-5 text-destructive" />
-          <Label htmlFor="obstacle-mode">Simulate Obstacle</Label>
-          <Switch id="obstacle-mode" checked={obstacle} onCheckedChange={handleObstacleToggle} />
+          <Label htmlFor="sensor-polling">Enable Sensor Polling</Label>
+          <Switch id="sensor-polling" checked={isPolling} onCheckedChange={setIsPolling} />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Gate
                 name="Entry"
-                status={obstacle && (entryGateStatus === 'moving' || entryGateStatus === 'obstacle') ? 'obstacle' : entryGateStatus}
+                status={entryGateStatus}
+                carDetected={carAtEntry}
                 onOpen={() => handleGateAction('entry', 'open')}
                 onClose={() => handleGateAction('entry', 'close')}
                 />
             <Gate
                 name="Exit"
-                status={obstacle && (exitGateStatus === 'moving' || exitGateStatus === 'obstacle') ? 'obstacle' : exitGateStatus}
+                status={exitGateStatus}
+                carDetected={carAtExit}
                 onOpen={() => handleGateAction('exit', 'open')}
                 onClose={() => handleGateAction('exit', 'close')}
                 />

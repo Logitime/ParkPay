@@ -28,16 +28,16 @@ import {
 
 
 // Mock data for demonstration
-const mockTickets = [
+const initialMockTickets = [
     { id: "T84B2-3", entryTime: new Date(new Date().getTime() - 3 * 60 * 60 * 1000 - 15 * 60 * 1000), plate: "CD-1123", status: "In-Park" },
     { id: "T84B2-5", entryTime: new Date(new Date().getTime() - 1 * 60 * 60 * 1000 - 45 * 60 * 1000), plate: "EF-6789", status: "In-Park" },
     { id: "V-EL5-9", entryTime: new Date(new Date().getTime() - 10 * 60 * 60 * 1000 - 30 * 60 * 1000), plate: "XY-9876", status: "In-Park", type: 'vip' },
 ];
 
-const mockTransactions = [
-    { ticketId: "T84B2-1", plate: "AD-4589", exit: "11:45 AM", status: "Paid", amount: "$13.00" },
-    { ticketId: "T84B2-2", plate: "BC-9102", exit: "12:01 PM", status: "Paid", amount: "$9.00" },
-    { ticketId: "T84B2-4", plate: "DE-4455", exit: "11:30 AM", status: "Paid", amount: "$5.00" },
+const initialMockTransactions = [
+    { ticketId: "T84B2-1", plate: "AD-4589", exit: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), status: "Paid", amount: 13.00 },
+    { ticketId: "T84B2-2", plate: "BC-9102", exit: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), status: "Paid", amount: 9.00 },
+    { ticketId: "T84B2-4", plate: "DE-4455", exit: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), status: "Paid", amount: 5.00 },
 ];
 
 // Mock data fetched from settings
@@ -94,6 +94,9 @@ export default function CashierPage() {
     const [fee, setFee] = useState(0);
     const [paymentProcessed, setPaymentProcessed] = useState(false);
     const [activeCashierId, setActiveCashierId] = useState<string | undefined>(mockCashiers[0].id.toString());
+    const [tickets, setTickets] = useState(initialMockTickets);
+    const [transactions, setTransactions] = useState(initialMockTransactions);
+
 
     const activeCashier = activeCashierId ? mockCashiers.find(c => c.id === parseInt(activeCashierId, 10)) : null;
     const assignedGate = activeCashier?.assignedGateId ? mockGates.find(g => g.id === activeCashier.assignedGateId) : null;
@@ -131,7 +134,7 @@ export default function CashierPage() {
             return;
         }
 
-        const foundTicket = mockTickets.find(t => t.id.toLowerCase() === ticketId.toLowerCase());
+        const foundTicket = tickets.find(t => t.id.toLowerCase() === ticketId.toLowerCase());
         if (foundTicket) {
             setActiveTicket(foundTicket);
             toast({
@@ -148,7 +151,19 @@ export default function CashierPage() {
     };
     
     const handleProcessPayment = () => {
+        if (!activeTicket) return;
+        
+        const newTransaction = {
+            ticketId: activeTicket.id,
+            plate: activeTicket.plate,
+            exit: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            status: "Paid",
+            amount: fee,
+        };
+
+        setTransactions([newTransaction, ...transactions]);
         setPaymentProcessed(true);
+
         toast({
             title: "Payment Confirmed",
             description: `Payment of $${fee.toFixed(2)} received for ticket ${activeTicket.id}.`,
@@ -185,6 +200,10 @@ export default function CashierPage() {
             });
             // Reset after successful exit
             setTimeout(() => {
+                // Remove the ticket from the active list
+                if(activeTicket && activeTicket.id !== 'LOST TICKET') {
+                    setTickets(tickets.filter(t => t.id !== activeTicket.id));
+                }
                 setActiveTicket(null);
                 setTicketId("");
                 setPaymentProcessed(false);
@@ -338,10 +357,10 @@ export default function CashierPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {mockTransactions.map((tx) => (
+                                    {transactions.map((tx) => (
                                     <TableRow key={tx.ticketId}>
                                         <TableCell className="font-medium">{tx.ticketId}</TableCell>
-                                        <TableCell>{tx.amount}</TableCell>
+                                        <TableCell>${tx.amount.toFixed(2)}</TableCell>
                                         <TableCell>
                                             <Badge variant="default" className={'bg-green-100 text-green-800'}>
                                                 {tx.status}

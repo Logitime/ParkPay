@@ -33,103 +33,66 @@ const GateActionSchema = z.object({
   action: z.enum(['open', 'close']),
 });
 
+const ReadInputActionSchema = z.object({
+  host: z.string(),
+  port: z.number(),
+});
 
-function writeToRelay(host: string, port: number, command: string): Promise<void> {
+
+function sendCommandToRelay(host: string, port: number, command: string): Promise<string> {
     return new Promise((resolve, reject) => {
         const client = new net.Socket();
         const timeout = 5000;
-        let connected = false;
-
-        const connectTimeout = setTimeout(() => {
-            if (!connected) {
-                client.destroy();
-                reject(new Error(`Connection to ${host}:${port} timed out`));
-            }
-        }, timeout);
-
-        client.on('error', (err) => {
-            console.error(`[Relay Write] Connection error to ${host}:${port}:`, err.message);
-            client.destroy();
-            clearTimeout(connectTimeout);
-            reject(err);
-        });
-
-        client.connect(port, host, () => {
-            connected = true;
-            clearTimeout(connectTimeout);
-            console.log(`[Relay Write] Connected to ${host}:${port}`);
-            console.log(`[Relay Write] Sending command: '${command}'`);
-            client.write(command, (err) => {
-                if (err) {
-                    console.error('[Relay Write] Error sending command:', err);
-                    client.destroy();
-                    return reject(err);
-                }
-                console.log('[Relay Write] Command sent. Closing connection.');
-                client.end(); // Gracefully close the connection
-                resolve();
-            });
-        });
-
-         client.on('close', () => {
-            console.log(`[Relay Write] Connection closed to ${host}:${port}`);
-        });
-    });
-}
-
-function readFromRelay(host: string, port: number, command: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const client = new net.Socket();
-        const timeout = 5000;
-        let hasResolved = false;
+        let hasFinished = false;
 
         const timer = setTimeout(() => {
-            if (!hasResolved) {
-                hasResolved = true;
+            if (!hasFinished) {
+                hasFinished = true;
                 client.destroy();
-                reject(new Error('Relay command timed out'));
+                reject(new Error(`Relay command timed out for command "${command}"`));
             }
         }, timeout);
 
         client.on('error', (err) => {
-            if (hasResolved) return;
-            hasResolved = true;
-            console.error(`[Relay Read] Connection error to ${host}:${port}:`, err.message);
+            if (hasFinished) return;
+            hasFinished = true;
+            console.error(`[Relay] Connection error to ${host}:${port}:`, err.message);
             client.destroy();
             clearTimeout(timer);
             reject(err);
         });
         
         client.on('close', () => {
-            if (!hasResolved) {
-                 hasResolved = true;
+            if (!hasFinished) {
+                 hasFinished = true;
                  clearTimeout(timer);
+                 // If the connection closes before we get data, it's an error.
                  reject(new Error('Connection closed before receiving data.'));
             }
-            console.log(`[Relay Read] Connection closed to ${host}:${port}`);
+            console.log(`[Relay] Connection closed to ${host}:${port}`);
         });
 
         client.connect(port, host, () => {
-            console.log(`[Relay Read] Connected to ${host}:${port}`);
-            console.log(`[Relay Read] Sending command: '${command}'`);
+            console.log(`[Relay] Connected to ${host}:${port}`);
+            console.log(`[Relay] Sending command: '${command}'`);
             client.write(command, (err) => {
                 if (err) {
-                   if (hasResolved) return;
-                   hasResolved = true;
-                   console.error('[Relay Read] Error writing command:', err);
+                   if (hasFinished) return;
+                   hasFinished = true;
+                   console.error('[Relay] Error writing command:', err);
                    clearTimeout(timer);
                    client.destroy();
                    return reject(err);
                 }
-                 console.log('[Relay Read] Command sent successfully.');
+                 console.log('[Relay] Command sent successfully.');
             });
         });
 
         client.on('data', (data) => {
-            if (hasResolved) return;
-            hasResolved = true;
+            if (hasFinished) return;
+            hasFinished = true;
             const response = data.toString().trim();
-            console.log(`[Relay Read] Received from relay: '${response}'`);
+            console.log(`[Relay] Received from relay: '${response}'`);
             clearTimeout(timer);
             client.end();
             resolve(response);
@@ -146,16 +109,19 @@ export async function controlGate(input: z.infer<typeof GateActionSchema>): Prom
 
     const { host, port, output, action } = validatedInput.data;
     
-    let commandString = '00000000'.split('');
-    if (action === 'open') {
-        commandString[output - 1] = '1';
-    }
-    // For 'close', the default '0' is correct.
-    const command = `all${commandString.join('')}`;
+    // According to the doc, command is 'on' or 'off' followed by the channel number.
+    const command = action === 'open' ? `on${output}` : `off${output}`;
+    const expectedResponse = command;
     
     try {
-        await writeToRelay(host, port, command);
-        return { success: true, message: `Gate ${action} command sent successfully.` };
+        const response = await sendCommandToRelay(host, port, command);
+        if (response === expectedResponse) {
+            return { success: true, message: `Gate ${action} command sent successfully.` };
+        } else {
+            const message = `Unexpected response from relay: got '${response}', expected '${expectedResponse}'`;
+            console.error(`[Relay] ${message}`);
+            return { success: false, message };
+        }
     } catch (e) {
         const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
         console.error(`[Relay] Failed to control gate: ${errorMessage}`);
@@ -163,10 +129,6 @@ export async function controlGate(input: z.infer<typeof GateActionSchema>): Prom
     }
 }
 
-const ReadInputActionSchema = z.object({
-  host: z.string(),
-  port: z.number(),
-});
 
 export async function readGateSensor(input: z.infer<typeof ReadInputActionSchema>): Promise<{ success: boolean; data?: string; message: string }> {
     const validatedInput = ReadInputActionSchema.safeParse(input);
@@ -175,11 +137,12 @@ export async function readGateSensor(input: z.infer<typeof ReadInputActionSchema
     }
 
     const { host, port } = validatedInput.data;
+    const command = 'input';
     
     try {
-        const response = await readFromRelay(host, port, 'input');
-        if (response.startsWith('input') && response.length >= 13) {
-            const binaryData = response.substring(5, 13); 
+        const response = await sendCommandToRelay(host, port, command);
+        if (response.startsWith('input') && response.length === 13) { // "input" is 5 chars + 8 binary digits
+            const binaryData = response.substring(5); 
             return { success: true, data: binaryData, message: 'Successfully read gate sensor.' };
         }
         return { success: false, message: `Unexpected response from relay: ${response}` };

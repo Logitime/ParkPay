@@ -116,14 +116,14 @@ export function GateControl() {
     const { success, message } = await controlGate({ ...settings, action });
 
     if (success) {
-        // Simulate gate movement time
-        setTimeout(() => {
-             setStatus(action === 'open' ? 'open' : 'closed');
-        }, 2000);
         toast({
             title: `Gate Action: ${gate}`,
             description: message,
         });
+        // Simulate gate movement time
+        setTimeout(() => {
+             setStatus(action === 'open' ? 'open' : 'closed');
+        }, 2000);
     } else {
         setStatus(previousStatus === 'moving' ? 'error' : previousStatus);
         toast({
@@ -143,6 +143,7 @@ export function GateControl() {
         try {
           const entryResponse = await readGateSensor({ host: gateSettings.entryGateIp, port: gateSettings.entryGatePort });
           if (entryResponse.success && entryResponse.data) {
+            // According to docs, input is `00000001` where 1 means switch is active
             const isCarPresent = entryResponse.data[gateSettings.entryGateInput - 1] === '1';
             setCarAtEntry(isCarPresent);
             pollFailures.current.entry = 0; // Reset on success
@@ -213,7 +214,7 @@ export function GateControl() {
   }) => {
     const config = statusConfig[status];
     const isEntry = name === 'Entry';
-    const isSensorError = (name === 'Entry' && pollFailures.current.entry >= MAX_FAILURES) || (name === 'Exit' && pollFailures.current.exit >= MAX_FAILURES);
+    const isSensorError = status === 'error';
 
     return (
       <div className="rounded-lg border p-4 space-y-4 bg-background">

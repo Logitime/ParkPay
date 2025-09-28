@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Car, DollarSign, ParkingSquare, Settings, User } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 
 type Zone = {
     id: number;
@@ -23,6 +24,12 @@ type Cashier = {
     name: string;
     email: string;
     role: 'admin' | 'editor' | 'viewer';
+}
+
+type Tariff = {
+    id: number;
+    name: string;
+    rate: number;
 }
 
 export default function SettingsPage() {
@@ -46,18 +53,27 @@ export default function SettingsPage() {
         { id: 1, name: "Zone A - Surface", spots: 100 },
         { id: 2, name: "Garage P1", spots: 250 },
     ]);
+    const [newZoneName, setNewZoneName] = useState("");
+    const [newZoneSpots, setNewZoneSpots] = useState("");
 
     // Tariff Settings State
-    const [hourlyRate, setHourlyRate] = useState("2.50");
-    const [dailyMax, setDailyMax] = useState("20.00");
-    const [lostTicketFee, setLostTicketFee] = useState("50.00");
-    const [weekendSurcharge, setWeekendSurcharge] = useState("5.00");
+    const [tariffs, setTariffs] = useState<Tariff[]>([
+        { id: 1, name: "Hourly Rate", rate: 2.50 },
+        { id: 2, name: "Daily Maximum", rate: 20.00 },
+        { id: 3, name: "Lost Ticket Fee", rate: 50.00 },
+        { id: 4, name: "Weekend Surcharge", rate: 5.00 },
+    ]);
+    const [newTariffName, setNewTariffName] = useState("");
+    const [newTariffRate, setNewTariffRate] = useState("");
 
     // Cashier Settings State
     const [cashiers, setCashiers] = useState<Cashier[]>([
         { id: 1, name: "John Doe", email: "john.doe@example.com", role: "editor" },
         { id: 2, name: "Jane Smith", email: "jane.smith@example.com", role: "viewer" },
     ]);
+    const [newCashierName, setNewCashierName] = useState("");
+    const [newCashierEmail, setNewCashierEmail] = useState("");
+
 
     const handleSaveChanges = (section: string) => {
         toast({
@@ -67,17 +83,39 @@ export default function SettingsPage() {
     };
 
     const handleAddNewZone = () => {
-        toast({
-            title: "New Zone Added",
-            description: "A new parking zone has been created.",
-        });
+        if (newZoneName && newZoneSpots) {
+            setZones([...zones, { id: Date.now(), name: newZoneName, spots: parseInt(newZoneSpots) }]);
+            setNewZoneName("");
+            setNewZoneSpots("");
+            toast({
+                title: "New Zone Added",
+                description: `Zone "${newZoneName}" has been created.`,
+            });
+        }
     };
     
     const handleAddNewCashier = () => {
-        toast({
-            title: "New Cashier Added",
-            description: "A new cashier account has been created.",
-        });
+        if (newCashierName && newCashierEmail) {
+            setCashiers([...cashiers, { id: Date.now(), name: newCashierName, email: newCashierEmail, role: 'editor' }]);
+            setNewCashierName("");
+            setNewCashierEmail("");
+            toast({
+                title: "New Cashier Added",
+                description: `Cashier "${newCashierName}" has been created.`,
+            });
+        }
+    };
+
+    const handleAddNewTariff = () => {
+        if (newTariffName && newTariffRate) {
+            setTariffs([...tariffs, { id: Date.now(), name: newTariffName, rate: parseFloat(newTariffRate) }]);
+            setNewTariffName("");
+            setNewTariffRate("");
+            toast({
+                title: "New Tariff Added",
+                description: `Tariff "${newTariffName}" has been created.`,
+            });
+        }
     };
     
     const handleCashierRoleChange = (cashierId: number, newRole: Cashier['role']) => {
@@ -201,7 +239,34 @@ export default function SettingsPage() {
                                     <Button variant="outline" size="sm">Edit</Button>
                                 </div>
                                 ))}
-                                <Button onClick={handleAddNewZone}>Add New Zone</Button>
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button>Add New Zone</Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Add New Zone</DialogTitle>
+                                            <DialogDescription>
+                                                Enter the details for the new parking zone.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid gap-4 py-4">
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="zone-name" className="text-right">Name</Label>
+                                                <Input id="zone-name" value={newZoneName} onChange={(e) => setNewZoneName(e.target.value)} className="col-span-3" />
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="zone-spots" className="text-right">Spots</Label>
+                                                <Input id="zone-spots" type="number" value={newZoneSpots} onChange={(e) => setNewZoneSpots(e.target.value)} className="col-span-3" />
+                                            </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <DialogClose asChild>
+                                                <Button type="button" onClick={handleAddNewZone}>Add Zone</Button>
+                                            </DialogClose>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
                             </CardContent>
                         </Card>
                     </TabsContent>
@@ -211,33 +276,49 @@ export default function SettingsPage() {
                                 <CardTitle>Tariff Management</CardTitle>
                                 <CardDescription>Set parking rates and rules.</CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="hourly-rate">Hourly Rate</Label>
-                                        <Input id="hourly-rate" type="number" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} placeholder="2.50" />
+                            <CardContent className="space-y-4">
+                                {tariffs.map(tariff => (
+                                    <div key={tariff.id} className="border rounded-lg p-4 flex justify-between items-center">
+                                        <div>
+                                            <p className="font-medium">{tariff.name}</p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-lg font-semibold">${tariff.rate.toFixed(2)}</span>
+                                            <Button variant="outline" size="sm">Edit</Button>
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="daily-max">Daily Maximum</Label>
-                                        <Input id="daily-max" type="number" value={dailyMax} onChange={(e) => setDailyMax(e.target.value)} placeholder="20.00" />
-                                    </div>
-                                     <div className="space-y-2">
-                                        <Label htmlFor="lost-ticket-fee">Lost Ticket Fee</Label>
-                                        <Input id="lost-ticket-fee" type="number" value={lostTicketFee} onChange={(e) => setLostTicketFee(e.target.value)} placeholder="50.00" />
-                                    </div>
-                                </div>
-                                 <div className="flex items-center justify-between space-x-2 p-4 border rounded-lg">
-                                    <div className="space-y-0.5">
-                                        <Label htmlFor="weekend-surcharge">Weekend Surcharge</Label>
-                                        <p className="text-xs text-muted-foreground">
-                                            Apply a surcharge for parking on weekends.
-                                        </p>
-                                    </div>
-                                    <Input id="weekend-surcharge" type="number" value={weekendSurcharge} onChange={(e) => setWeekendSurcharge(e.target.value)} placeholder="5.00" className="w-24" />
-                                </div>
+                                ))}
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button>Add New Tariff</Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Add New Tariff</DialogTitle>
+                                            <DialogDescription>
+                                                Enter the details for the new tariff.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid gap-4 py-4">
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="tariff-name" className="text-right">Name</Label>
+                                                <Input id="tariff-name" value={newTariffName} onChange={(e) => setNewTariffName(e.target.value)} className="col-span-3" />
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="tariff-rate" className="text-right">Rate ($)</Label>
+                                                <Input id="tariff-rate" type="number" value={newTariffRate} onChange={(e) => setNewTariffRate(e.target.value)} className="col-span-3" />
+                                            </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <DialogClose asChild>
+                                                <Button type="button" onClick={handleAddNewTariff}>Add Tariff</Button>
+                                            </DialogClose>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
                             </CardContent>
                              <CardContent>
-                                <Button onClick={() => handleSaveChanges('Tariff')}>Save Tariffs</Button>
+                                <Button onClick={() => handleSaveChanges('Tariff')}>Save All Tariffs</Button>
                             </CardContent>
                         </Card>
                     </TabsContent>
@@ -266,7 +347,34 @@ export default function SettingsPage() {
                                         </Select>
                                     </div>
                                ))}
-                                <Button onClick={handleAddNewCashier}>Add New Cashier</Button>                            
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button>Add New Cashier</Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Add New Cashier</DialogTitle>
+                                            <DialogDescription>
+                                                Enter the details for the new cashier.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid gap-4 py-4">
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="cashier-name" className="text-right">Name</Label>
+                                                <Input id="cashier-name" value={newCashierName} onChange={(e) => setNewCashierName(e.target.value)} className="col-span-3" />
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="cashier-email" className="text-right">Email</Label>
+                                                <Input id="cashier-email" type="email" value={newCashierEmail} onChange={(e) => setNewCashierEmail(e.target.value)} className="col-span-3" />
+                                            </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <DialogClose asChild>
+                                                <Button type="button" onClick={handleAddNewCashier}>Add Cashier</Button>
+                                            </DialogClose>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>                            
                             </CardContent>
                         </Card>
                     </TabsContent>
@@ -275,3 +383,5 @@ export default function SettingsPage() {
         </div>
     )
 }
+
+    

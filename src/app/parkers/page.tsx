@@ -41,6 +41,7 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Users, PlusCircle, Edit } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type Parker = {
   id: number;
@@ -48,15 +49,30 @@ type Parker = {
   plate: string;
   participation: 'daily' | 'weekly' | 'monthly' | 'yearly';
   accessId: string;
+  tel: string;
+  email: string;
+  dob: string;
+  carModel: string;
 };
 
 const mockParkers: Parker[] = [
-  { id: 1, name: 'Alice Johnson', plate: 'VIP-001', participation: 'monthly', accessId: 'CARD-1001' },
-  { id: 2, name: 'Bob Williams', plate: 'EMP-002', participation: 'yearly', accessId: 'CARD-1002' },
-  { id: 3, name: 'Charlie Brown', plate: 'WK-003', participation: 'weekly', accessId: 'QR-CODE-XYZ' },
+  { id: 1, name: 'Alice Johnson', plate: 'VIP-001', participation: 'monthly', accessId: 'CARD-1001', tel: '555-1234', email: 'alice@example.com', dob: '1990-05-15', carModel: 'Tesla Model 3' },
+  { id: 2, name: 'Bob Williams', plate: 'EMP-002', participation: 'yearly', accessId: 'CARD-1002', tel: '555-5678', email: 'bob@example.com', dob: '1985-11-20', carModel: 'Ford F-150' },
+  { id: 3, name: 'Charlie Brown', plate: 'WK-003', participation: 'weekly', accessId: 'QR-CODE-XYZ', tel: '555-9876', email: 'charlie@example.com', dob: '1998-02-10', carModel: 'Honda Civic' },
 ];
 
 const participationOptions = ['daily', 'weekly', 'monthly', 'yearly'];
+
+const initialFormState = {
+    name: '',
+    plate: '',
+    participation: 'monthly' as Parker['participation'],
+    accessId: '',
+    tel: '',
+    email: '',
+    dob: '',
+    carModel: '',
+};
 
 export default function ParkersPage() {
   const { toast } = useToast();
@@ -64,12 +80,7 @@ export default function ParkersPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingParker, setEditingParker] = useState<Parker | null>(null);
 
-  const [parkerForm, setParkerForm] = useState({
-    name: '',
-    plate: '',
-    participation: 'monthly' as Parker['participation'],
-    accessId: '',
-  });
+  const [parkerForm, setParkerForm] = useState(initialFormState);
 
   const handleEditClick = (parker: Parker) => {
     setEditingParker(parker);
@@ -78,18 +89,17 @@ export default function ParkersPage() {
         plate: parker.plate,
         participation: parker.participation,
         accessId: parker.accessId,
+        tel: parker.tel,
+        email: parker.email,
+        dob: parker.dob,
+        carModel: parker.carModel,
     });
     setIsDialogOpen(true);
   };
   
   const handleAddNewClick = () => {
     setEditingParker(null);
-    setParkerForm({
-        name: '',
-        plate: '',
-        participation: 'monthly',
-        accessId: '',
-    });
+    setParkerForm(initialFormState);
     setIsDialogOpen(true);
   };
 
@@ -98,18 +108,18 @@ export default function ParkersPage() {
   };
 
   const handleSaveChanges = () => {
-    if (!parkerForm.name || !parkerForm.plate) {
+    if (!parkerForm.name || !parkerForm.plate || !parkerForm.email) {
         toast({
             variant: "destructive",
             title: "Validation Error",
-            description: "Name and License Plate cannot be empty.",
+            description: "Name, License Plate, and Email cannot be empty.",
         });
         return;
     }
 
     if (editingParker) {
         // Update existing parker
-        setParkers(parkers.map(p => p.id === editingParker.id ? { ...p, ...parkerForm } : p));
+        setParkers(parkers.map(p => p.id === editingParker.id ? { ...editingParker, ...parkerForm } : p));
         toast({
             title: "Parker Updated",
             description: `Details for ${parkerForm.name} have been updated.`,
@@ -145,7 +155,7 @@ export default function ParkersPage() {
                             <DialogTrigger asChild>
                                 <Button onClick={handleAddNewClick}><PlusCircle className="mr-2" /> Add New Parker</Button>
                             </DialogTrigger>
-                            <DialogContent>
+                            <DialogContent className="max-h-[90vh] overflow-y-auto">
                                 <DialogHeader>
                                     <DialogTitle>{editingParker ? "Edit Parker" : "Add New Parker"}</DialogTitle>
                                     <DialogDescription>
@@ -158,8 +168,24 @@ export default function ParkersPage() {
                                         <Input id="name" value={parkerForm.name} onChange={(e) => handleFormChange('name', e.target.value)} className="col-span-3" />
                                     </div>
                                     <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="email" className="text-right">Email</Label>
+                                        <Input id="email" type="email" value={parkerForm.email} onChange={(e) => handleFormChange('email', e.target.value)} className="col-span-3" />
+                                    </div>
+                                     <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="tel" className="text-right">Telephone</Label>
+                                        <Input id="tel" type="tel" value={parkerForm.tel} onChange={(e) => handleFormChange('tel', e.target.value)} className="col-span-3" />
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="dob" className="text-right">Date of Birth</Label>
+                                        <Input id="dob" type="date" value={parkerForm.dob} onChange={(e) => handleFormChange('dob', e.target.value)} className="col-span-3" />
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
                                         <Label htmlFor="plate" className="text-right">License Plate</Label>
                                         <Input id="plate" value={parkerForm.plate} onChange={(e) => handleFormChange('plate', e.target.value)} className="col-span-3" />
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="carModel" className="text-right">Car Model</Label>
+                                        <Input id="carModel" value={parkerForm.carModel} onChange={(e) => handleFormChange('carModel', e.target.value)} className="col-span-3" />
                                     </div>
                                     <div className="grid grid-cols-4 items-center gap-4">
                                         <Label htmlFor="participation" className="text-right">Participation</Label>
@@ -190,34 +216,40 @@ export default function ParkersPage() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>License Plate</TableHead>
-                                <TableHead>Participation</TableHead>
-                                <TableHead>Access ID</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {parkers.map(parker => (
-                                <TableRow key={parker.id}>
-                                    <TableCell className="font-medium">{parker.name}</TableCell>
-                                    <TableCell>{parker.plate}</TableCell>
-                                    <TableCell>
-                                        <Badge variant="secondary">{parker.participation.charAt(0).toUpperCase() + parker.participation.slice(1)}</Badge>
-                                    </TableCell>
-                                    <TableCell>{parker.accessId}</TableCell>
-                                    <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" onClick={() => handleEditClick(parker)}>
-                                            <Edit className="size-4" />
-                                        </Button>
-                                    </TableCell>
+                    <ScrollArea className="h-[60vh]">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Email</TableHead>
+                                    <TableHead>License Plate</TableHead>
+                                    <TableHead>Car Model</TableHead>
+                                    <TableHead>Participation</TableHead>
+                                    <TableHead>Access ID</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {parkers.map(parker => (
+                                    <TableRow key={parker.id}>
+                                        <TableCell className="font-medium">{parker.name}</TableCell>
+                                        <TableCell>{parker.email}</TableCell>
+                                        <TableCell>{parker.plate}</TableCell>
+                                        <TableCell>{parker.carModel}</TableCell>
+                                        <TableCell>
+                                            <Badge variant="secondary">{parker.participation.charAt(0).toUpperCase() + parker.participation.slice(1)}</Badge>
+                                        </TableCell>
+                                        <TableCell>{parker.accessId}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Button variant="ghost" size="icon" onClick={() => handleEditClick(parker)}>
+                                                <Edit className="size-4" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </ScrollArea>
                 </CardContent>
             </Card>
         </main>

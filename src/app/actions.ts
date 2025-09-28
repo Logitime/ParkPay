@@ -144,3 +144,4 @@ export async function readGateSensor(input: z.infer<typeof ReadInputActionSchema
         return { success: false, message: `Failed to read gate sensor: ${errorMessage}` };
     }
 }
+

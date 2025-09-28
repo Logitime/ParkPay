@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   ParkingSquare,
   Settings,
+  Car,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import {
@@ -19,6 +20,7 @@ export function SidebarLinks() {
 
   const links = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/gates', label: 'Gates', icon: Car },
     { href: '/zones', label: 'Zones', icon: ParkingSquare },
     { href: '/reports', label: 'Reports', icon: BarChart3 },
     { href: '/settings', label: 'Settings', icon: Settings },

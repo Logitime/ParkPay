@@ -5,6 +5,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -186,33 +187,36 @@ export function GateControl() {
   };
 
   return (
-    <Card className="lg:col-span-1">
-      <CardHeader>
+    <Card>
+       <CardHeader>
         <div className="flex items-start justify-between">
           <div>
-            <CardTitle>Gate Control</CardTitle>
+            <CardTitle>Manual Gate Control</CardTitle>
+            <CardDescription>Manually open or close entry and exit gates.</CardDescription>
           </div>
           <ArrowLeftRight className="h-8 w-8 text-primary" />
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         <div className="flex items-center space-x-2 rounded-lg border p-3 bg-muted/50">
           <TriangleAlert className="size-5 text-destructive" />
           <Label htmlFor="obstacle-mode">Simulate Obstacle</Label>
           <Switch id="obstacle-mode" checked={obstacle} onCheckedChange={handleObstacleToggle} />
         </div>
-        <Gate
-          name="Entry"
-          status={obstacle && (entryGateStatus === 'moving' || entryGateStatus === 'obstacle') ? 'obstacle' : entryGateStatus}
-          onOpen={() => handleGateAction('entry', 'open')}
-          onClose={() => handleGateAction('entry', 'close')}
-        />
-        <Gate
-          name="Exit"
-          status={obstacle && (exitGateStatus === 'moving' || exitGateStatus === 'obstacle') ? 'obstacle' : exitGateStatus}
-          onOpen={() => handleGateAction('exit', 'open')}
-          onClose={() => handleGateAction('exit', 'close')}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Gate
+                name="Entry"
+                status={obstacle && (entryGateStatus === 'moving' || entryGateStatus === 'obstacle') ? 'obstacle' : entryGateStatus}
+                onOpen={() => handleGateAction('entry', 'open')}
+                onClose={() => handleGateAction('entry', 'close')}
+                />
+            <Gate
+                name="Exit"
+                status={obstacle && (exitGateStatus === 'moving' || exitGateStatus === 'obstacle') ? 'obstacle' : exitGateStatus}
+                onOpen={() => handleGateAction('exit', 'open')}
+                onClose={() => handleGateAction('exit', 'close')}
+                />
+        </div>
       </CardContent>
     </Card>
   );

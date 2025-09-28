@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -6,6 +7,7 @@ import {
   ParkingSquare,
   Settings,
   Car,
+  HandCoins,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import {
@@ -20,6 +22,7 @@ export function SidebarLinks() {
 
   const links = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/cashier', label: 'Cashier', icon: HandCoins },
     { href: '/gates', label: 'Gates', icon: Car },
     { href: '/zones', label: 'Zones', icon: ParkingSquare },
     { href: '/reports', label: 'Reports', icon: BarChart3 },

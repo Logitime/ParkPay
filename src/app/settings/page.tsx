@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from "react";
@@ -11,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Car, DollarSign, ParkingSquare, Settings, User, KeyRound, QrCode } from "lucide-react";
+import { Car, DollarSign, ParkingSquare, Settings, User, KeyRound, QrCode, Printer } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 
 type Zone = {
@@ -42,6 +43,7 @@ type Gate = {
     input: string;
     output: string;
     serialPort: string;
+    printerPort: string;
 }
 
 export default function SettingsPage() {
@@ -53,8 +55,8 @@ export default function SettingsPage() {
 
     // Gate Settings State
     const [gates, setGates] = useState<Gate[]>([
-        { id: 1, name: "Entry Gate", ip: "10.0.0.185", port: "5000", input: "1", output: "1", serialPort: "" },
-        { id: 2, name: "Exit Gate", ip: "192.168.1.11", port: "5000", input: "2", output: "2", serialPort: "COM3" },
+        { id: 1, name: "Entry Gate", ip: "10.0.0.185", port: "5000", input: "1", output: "1", serialPort: "", printerPort: "COM1" },
+        { id: 2, name: "Exit Gate", ip: "192.168.1.11", port: "5000", input: "2", output: "2", serialPort: "COM3", printerPort: "COM4" },
     ]);
     const [autoOpen, setAutoOpen] = useState(true);
     const [newGateName, setNewGateName] = useState("");
@@ -106,6 +108,7 @@ export default function SettingsPage() {
                 input: (gates.length + 1).toString(),
                 output: (gates.length + 1).toString(),
                 serialPort: "",
+                printerPort: "",
             };
             setGates([...gates, newGate]);
             setNewGateName("");
@@ -234,15 +237,20 @@ export default function SettingsPage() {
                                                     <Label htmlFor={`gate-output-${gate.id}`}>Open Gate Port (Output)</Label>
                                                     <Input id={`gate-output-${gate.id}`} type="number" value={gate.output} onChange={(e) => handleGateChange(gate.id, 'output', e.target.value)} placeholder="1" />
                                                 </div>
-                                                {gate.name.toLowerCase().includes('exit') && (
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor={`gate-serial-${gate.id}`}>Serial Port for QR Scanner</Label>
-                                                         <div className="flex items-center gap-2">
-                                                            <QrCode className="size-5 text-muted-foreground" />
-                                                            <Input id={`gate-serial-${gate.id}`} value={gate.serialPort} onChange={(e) => handleGateChange(gate.id, 'serialPort', e.target.value)} placeholder="e.g., COM3" />
-                                                        </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor={`gate-serial-${gate.id}`}>Serial Port for QR Scanner</Label>
+                                                     <div className="flex items-center gap-2">
+                                                        <QrCode className="size-5 text-muted-foreground" />
+                                                        <Input id={`gate-serial-${gate.id}`} value={gate.serialPort} onChange={(e) => handleGateChange(gate.id, 'serialPort', e.target.value)} placeholder="e.g., COM3" />
                                                     </div>
-                                                )}
+                                                </div>
+                                                 <div className="space-y-2">
+                                                    <Label htmlFor={`gate-printer-${gate.id}`}>Serial Port for Thermal Printer</Label>
+                                                     <div className="flex items-center gap-2">
+                                                        <Printer className="size-5 text-muted-foreground" />
+                                                        <Input id={`gate-printer-${gate.id}`} value={gate.printerPort} onChange={(e) => handleGateChange(gate.id, 'printerPort', e.target.value)} placeholder="e.g., COM4" />
+                                                    </div>
+                                                </div>
                                             </div>
                                         </Card>
                                     ))}

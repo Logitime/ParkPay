@@ -104,7 +104,10 @@ export async function controlGate(input: z.infer<typeof GateActionSchema>): Prom
     const { host, port, output, action } = validatedInput.data;
     
     let commandString = '00000000'.split('');
-    commandString[output - 1] = action === 'open' ? '1' : '0';
+    if (action === 'open') {
+        commandString[output - 1] = '1';
+    }
+    // For 'close', the default '0' is correct.
     const command = `all${commandString.join('')}`;
     
     try {
@@ -144,4 +147,3 @@ export async function readGateSensor(input: z.infer<typeof ReadInputActionSchema
         return { success: false, message: `Failed to read gate sensor: ${errorMessage}` };
     }
 }
-

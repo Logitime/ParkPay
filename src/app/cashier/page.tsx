@@ -167,6 +167,7 @@ export default function CashierPage() {
             output: parseInt(assignedGate.output, 10),
         }
 
+        const command = `on${gateToOpen.output}`;
         const { success, message } = await controlGate({ ...gateToOpen, action: 'open' });
         
         if (success) {
@@ -347,3 +348,5 @@ export default function CashierPage() {
         </div>
     )
 }
+
+    

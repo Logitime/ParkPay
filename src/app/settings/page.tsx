@@ -12,10 +12,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Car, DollarSign, ParkingSquare, Settings, User, KeyRound, QrCode, Printer } from "lucide-react";
+import { Car, DollarSign, ParkingSquare, Settings, User, KeyRound, QrCode, Printer, Clock, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { mockCashiers } from "@/lib/mock-data";
+import { Combobox } from "@/components/ui/combobox";
 
 type Zone = {
     id: number;
@@ -47,6 +48,14 @@ type Gate = {
     output: string;
     serialPort: string;
     printerPort: string;
+}
+
+type Shift = {
+    id: number;
+    name: string;
+    startTime: string;
+    endTime: string;
+    assignedCashierIds: number[];
 }
 
 export default function SettingsPage() {
@@ -93,6 +102,12 @@ export default function SettingsPage() {
     const [newCashierEmail, setNewCashierEmail] = useState("");
     const [newCashierGateId, setNewCashierGateId] = useState<string | null>(null);
 
+    // Shift Settings State
+    const [shifts, setShifts] = useState<Shift[]>([
+        { id: 1, name: "Morning Shift", startTime: "08:00", endTime: "16:00", assignedCashierIds: [1] },
+        { id: 2, name: "Evening Shift", startTime: "16:00", endTime: "00:00", assignedCashierIds: [2] },
+    ]);
+    const [editingShift, setEditingShift] = useState<Shift | null>(null);
 
     const handleSaveChanges = (section: string) => {
         toast({
@@ -189,18 +204,42 @@ export default function SettingsPage() {
         setCashiers(cashiers.map(c => c.id === cashierId ? { ...c, [field]: value } : c));
     };
 
+    const handleUpdateShift = (updatedShift: Shift) => {
+        setShifts(shifts.map(s => s.id === updatedShift.id ? updatedShift : s));
+        setEditingShift(null);
+        toast({ title: "Shift Updated", description: `Shift "${updatedShift.name}" has been saved.` });
+    };
+
+    const handleAddShift = () => {
+        const newShift: Shift = {
+            id: Date.now(),
+            name: "New Shift",
+            startTime: "00:00",
+            endTime: "00:00",
+            assignedCashierIds: [],
+        };
+        setShifts([...shifts, newShift]);
+        setEditingShift(newShift);
+    };
+
+    const handleDeleteShift = (shiftId: number) => {
+        setShifts(shifts.filter(s => s.id !== shiftId));
+        toast({ title: "Shift Deleted", variant: "destructive" });
+    };
+
 
     return (
         <div className="flex flex-col h-full">
             <Header title="Settings" />
             <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
                  <Tabs defaultValue="general">
-                    <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+                    <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
                         <TabsTrigger value="general"><Settings className="mr-2" /> General</TabsTrigger>
                         <TabsTrigger value="gates"><Car className="mr-2" /> Gates</TabsTrigger>
                         <TabsTrigger value="zones"><ParkingSquare className="mr-2" /> Zones</TabsTrigger>
                         <TabsTrigger value="tariffs"><DollarSign className="mr-2" /> Tariffs</TabsTrigger>
                         <TabsTrigger value="cashiers"><User className="mr-2" /> Cashiers</TabsTrigger>
+                        <TabsTrigger value="shifts"><Clock className="mr-2" /> Shifts</TabsTrigger>
                     </TabsList>
                     <TabsContent value="general">
                         <Card>
@@ -524,6 +563,43 @@ export default function SettingsPage() {
                             </CardContent>
                         </Card>
                     </TabsContent>
+                     <TabsContent value="shifts">
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <div>
+                                    <CardTitle>Shift Management</CardTitle>
+                                    <CardDescription>Define work shifts and assign cashiers.</CardDescription>
+                                </div>
+                                <Button onClick={handleAddShift}>Add New Shift</Button>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {shifts.map(shift => (
+                                    <Card key={shift.id}>
+                                        <CardHeader className="flex flex-row items-center justify-between">
+                                             <p className="font-semibold">{shift.name} ({shift.startTime} - {shift.endTime})</p>
+                                             <div>
+                                                <Button variant="ghost" size="icon" onClick={() => setEditingShift(shift)}>
+                                                   Edit
+                                                </Button>
+                                                 <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteShift(shift.id)}>
+                                                    <Trash2 className="size-4" />
+                                                </Button>
+                                             </div>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-sm font-medium mb-2">Assigned Cashiers</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {shift.assignedCashierIds.map(id => {
+                                                    const cashier = cashiers.find(c => c.id === id);
+                                                    return cashier ? <Badge key={id} variant="secondary">{cashier.name}</Badge> : null;
+                                                })}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
                 </Tabs>
                 {editingTariff && (
                     <Dialog open={!!editingTariff} onOpenChange={(open) => !open && setEditingTariff(null)}>
@@ -555,6 +631,52 @@ export default function SettingsPage() {
                                 <DialogClose asChild>
                                     <Button type="button" onClick={handleUpdateTariff}>Save Changes</Button>
                                 </DialogClose>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                )}
+                 {editingShift && (
+                    <Dialog open={!!editingShift} onOpenChange={(open) => !open && setEditingShift(null)}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Edit Shift</DialogTitle>
+                                <DialogDescription>
+                                    Update the details for the shift.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="edit-shift-name" className="text-right">Shift Name</Label>
+                                    <Input id="edit-shift-name" value={editingShift.name} onChange={(e) => setEditingShift({...editingShift, name: e.target.value})} className="col-span-3" />
+                                </div>
+                                 <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="edit-shift-start" className="text-right">Start Time</Label>
+                                    <Input id="edit-shift-start" type="time" value={editingShift.startTime} onChange={(e) => setEditingShift({...editingShift, startTime: e.target.value})} className="col-span-3" />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="edit-shift-end" className="text-right">End Time</Label>
+                                    <Input id="edit-shift-end" type="time" value={editingShift.endTime} onChange={(e) => setEditingShift({...editingShift, endTime: e.target.value})} className="col-span-3" />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="edit-shift-cashiers" className="text-right">Cashiers</Label>
+                                    <Combobox
+                                        className="col-span-3"
+                                        options={cashiers.filter(c => c.role === 'cashier').map(c => ({ value: c.id.toString(), label: c.name }))}
+                                        selected={editingShift.assignedCashierIds.map(id => id.toString())}
+                                        onSelectedChange={(selected) => {
+                                            setEditingShift({ ...editingShift, assignedCashierIds: selected.map(s => parseInt(s)) });
+                                        }}
+                                        placeholder="Select cashiers..."
+                                        searchPlaceholder="Search cashiers..."
+                                        notFoundPlaceholder="No cashiers found."
+                                    />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button variant="outline" onClick={() => setEditingShift(null)}>Cancel</Button>
+                                </DialogClose>
+                                <Button type="button" onClick={() => handleUpdateShift(editingShift)}>Save Changes</Button>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>

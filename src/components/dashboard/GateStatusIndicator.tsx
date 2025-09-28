@@ -1,44 +1,54 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Wifi, WifiOff } from "lucide-react";
+import { Wifi, WifiOff, Car } from "lucide-react";
 import { useState } from "react";
 import { Switch } from "../ui/switch";
 import { Label } from "../ui/label";
 
 export function GateStatusIndicator() {
-    const [connected, setConnected] = useState(true);
+    const [entryConnected, setEntryConnected] = useState(true);
+    const [exitConnected, setExitConnected] = useState(false);
+
+    const GateConnection = ({ name, connected }: { name: string, connected: boolean }) => (
+        <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/50">
+            <div className="flex items-center gap-3">
+                <Car className="size-6 text-muted-foreground" />
+                <span className="font-semibold">{name} Gate</span>
+            </div>
+            <div className={`flex items-center gap-2 text-sm font-medium ${connected ? 'text-green-500' : 'text-destructive'}`}>
+                {connected ? <Wifi className="size-5" /> : <WifiOff className="size-5" />}
+                <span className="font-bold">{connected ? 'Online' : 'Offline'}</span>
+            </div>
+        </div>
+    );
 
     return (
         <Card>
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div>
-                        <CardTitle>Gate Connection</CardTitle>
+                        <CardTitle>Gate Connections</CardTitle>
                         <CardDescription>Live status of the gate relays.</CardDescription>
                     </div>
-                    {connected ? <Wifi className="h-8 w-8 text-green-500" /> : <WifiOff className="h-8 w-8 text-destructive" />}
+                     <Wifi className="h-8 w-8 text-primary" />
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="flex flex-col items-center justify-center h-40 space-y-4">
-                     {connected ? (
-                        <div className="flex flex-col items-center text-center">
-                            <Wifi className="h-16 w-16 text-green-500" />
-                            <p className="text-2xl font-bold font-headline mt-2">Connected</p>
-                            <p className="text-muted-foreground">Gate relays are online.</p>
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center text-center">
-                            <WifiOff className="h-16 w-16 text-destructive" />
-                            <p className="text-2xl font-bold font-headline mt-2">Disconnected</p>
-                            <p className="text-muted-foreground">Check relay power and network.</p>
-                        </div>
-                    )}
+                <div className="space-y-4">
+                    <GateConnection name="Entry" connected={entryConnected} />
+                    <GateConnection name="Exit" connected={exitConnected} />
                 </div>
-                 <div className="flex items-center space-x-2 rounded-lg border p-3 bg-muted/50 justify-center">
-                    <Label htmlFor="connection-toggle">Simulate Disconnection</Label>
-                    <Switch id="connection-toggle" checked={!connected} onCheckedChange={(checked) => setConnected(!checked)} />
+                 <div className="flex flex-col gap-4 rounded-lg border p-4">
+                    <p className="text-sm font-medium text-muted-foreground">Simulation Controls</p>
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="entry-connection-toggle">Entry Gate Connection</Label>
+                        <Switch id="entry-connection-toggle" checked={entryConnected} onCheckedChange={setEntryConnected} />
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="exit-connection-toggle">Exit Gate Connection</Label>
+                        <Switch id="exit-connection-toggle" checked={exitConnected} onCheckedChange={setExitConnected} />
+                    </div>
                 </div>
             </CardContent>
         </Card>

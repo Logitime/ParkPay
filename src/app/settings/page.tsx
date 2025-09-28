@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Car, DollarSign, ParkingSquare, Settings, User, KeyRound, QrCode, Printer } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { mockCashiers } from "@/lib/mock-data";
 
 type Zone = {
     id: number;
@@ -87,11 +88,7 @@ export default function SettingsPage() {
     const [editingTariff, setEditingTariff] = useState<Tariff | null>(null);
 
     // Cashier Settings State
-    const [cashiers, setCashiers] = useState<Cashier[]>([
-        { id: 1, name: "John Doe", email: "john.doe@example.com", role: "cashier", assignedGateId: 2 },
-        { id: 2, name: "Jane Smith", email: "jane.smith@example.com", role: "viewer", assignedGateId: null },
-        { id: 3, name: "Admin User", email: "admin@parkpay.co", role: "admin", assignedGateId: null },
-    ]);
+    const [cashiers, setCashiers] = useState<Cashier[]>(mockCashiers.map(c => ({...c})));
     const [newCashierName, setNewCashierName] = useState("");
     const [newCashierEmail, setNewCashierEmail] = useState("");
     const [newCashierGateId, setNewCashierGateId] = useState<string | null>(null);
@@ -566,7 +563,3 @@ export default function SettingsPage() {
         </div>
     )
 }
-
-    
-
-    

@@ -1,5 +1,5 @@
 import { Header } from "@/components/layout/Header";
-import { DateRangePicker } from "@/components/reports/DateRangePicker";
+import { Filters } from "@/components/reports/Filters";
 import { ReportSummary } from "@/components/reports/ReportSummary";
 import { RevenueChart } from "@/components/reports/RevenueChart";
 import { TransactionsTable } from "@/components/reports/TransactionsTable";
@@ -14,7 +14,7 @@ export default function ReportsPage() {
                         <h2 className="text-2xl font-bold font-headline">Financial Reports</h2>
                         <p className="text-muted-foreground">Analyze revenue and transaction trends.</p>
                     </div>
-                    <DateRangePicker />
+                    <Filters />
                 </div>
                 <ReportSummary />
                 <RevenueChart />

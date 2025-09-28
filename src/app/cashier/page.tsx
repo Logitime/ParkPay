@@ -25,33 +25,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { mockGates, mockCashiers, initialMockTickets, initialMockTransactions } from "@/lib/mock-data";
 
-
-// Mock data for demonstration
-const initialMockTickets = [
-    { id: "T84B2-3", entryTime: new Date(new Date().getTime() - 3 * 60 * 60 * 1000 - 15 * 60 * 1000), plate: "CD-1123", status: "In-Park" },
-    { id: "T84B2-5", entryTime: new Date(new Date().getTime() - 1 * 60 * 60 * 1000 - 45 * 60 * 1000), plate: "EF-6789", status: "In-Park" },
-    { id: "V-EL5-9", entryTime: new Date(new Date().getTime() - 10 * 60 * 60 * 1000 - 30 * 60 * 1000), plate: "XY-9876", status: "In-Park", type: 'vip' },
-];
-
-const initialMockTransactions = [
-    { ticketId: "T84B2-1", plate: "AD-4589", exit: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), status: "Paid", amount: 13.00 },
-    { ticketId: "T84B2-2", plate: "BC-9102", exit: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), status: "Paid", amount: 9.00 },
-    { ticketId: "T84B2-4", plate: "DE-4455", exit: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), status: "Paid", amount: 5.00 },
-];
-
-// Mock data fetched from settings
-const mockGates = [
-    { id: 1, name: "Entry Gate", ip: "10.0.0.185", port: "5000", output: "1" },
-    { id: 2, name: "Exit Gate", ip: "192.168.1.11", port: "5000", output: "2" },
-    { id: 3, name: "Garage P2 Exit", ip: "192.168.1.12", port: "5000", output: "3" },
-];
-
-const mockCashiers = [
-    { id: 1, name: "John Doe", assignedGateId: 2 },
-    { id: 2, name: "Jane Smith", assignedGateId: 3 },
-    { id: 3, name: "Admin User", assignedGateId: null }, // Admin can operate any
-];
 
 // New complex tariff calculation based on settings.
 // In a real app, this would come from a shared config or API.
@@ -377,5 +352,3 @@ export default function CashierPage() {
         </div>
     )
 }
-
-    

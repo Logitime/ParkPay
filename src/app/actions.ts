@@ -43,33 +43,27 @@ function sendCommandToRelay(host: string, port: number, command: string): Promis
     return new Promise((resolve, reject) => {
         const client = new net.Socket();
         const timeout = 5000;
-        let hasFinished = false;
 
         const timer = setTimeout(() => {
-            if (!hasFinished) {
-                hasFinished = true;
-                client.destroy();
-                reject(new Error(`Relay command timed out for command "${command}"`));
-            }
+            client.destroy();
+            reject(new Error(`Relay command timed out for command "${command}"`));
         }, timeout);
 
         client.on('error', (err) => {
-            if (hasFinished) return;
-            hasFinished = true;
             console.error(`[Relay] Connection error to ${host}:${port}:`, err.message);
             client.destroy();
             clearTimeout(timer);
             reject(err);
         });
         
-        client.on('close', () => {
-            if (!hasFinished) {
-                 hasFinished = true;
-                 clearTimeout(timer);
-                 // If the connection closes before we get data, it's an error.
+        client.on('close', (hadError) => {
+            if (!hadError) {
+                 // If the connection is closed gracefully but we haven't resolved the promise yet,
+                 // it means we didn't get the data we expected.
                  reject(new Error('Connection closed before receiving data.'));
             }
-            console.log(`[Relay] Connection closed to ${host}:${port}`);
+             console.log(`[Relay] Connection closed to ${host}:${port}`);
+             clearTimeout(timer);
         });
 
         client.connect(port, host, () => {
@@ -77,11 +71,9 @@ function sendCommandToRelay(host: string, port: number, command: string): Promis
             console.log(`[Relay] Sending command: '${command}'`);
             client.write(command, (err) => {
                 if (err) {
-                   if (hasFinished) return;
-                   hasFinished = true;
                    console.error('[Relay] Error writing command:', err);
-                   clearTimeout(timer);
                    client.destroy();
+                   clearTimeout(timer);
                    return reject(err);
                 }
                  console.log('[Relay] Command sent successfully.');
@@ -89,12 +81,10 @@ function sendCommandToRelay(host: string, port: number, command: string): Promis
         });
 
         client.on('data', (data) => {
-            if (hasFinished) return;
-            hasFinished = true;
             const response = data.toString().trim();
             console.log(`[Relay] Received from relay: '${response}'`);
+            client.end(); // Gracefully close the connection
             clearTimeout(timer);
-            client.end();
             resolve(response);
         });
     });

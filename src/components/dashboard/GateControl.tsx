@@ -143,8 +143,8 @@ export function GateControl() {
         try {
           const entryResponse = await readGateSensor({ host: gateSettings.entryGateIp, port: gateSettings.entryGatePort });
           if (entryResponse.success && entryResponse.data) {
-            // According to docs, input is `00000001` where 1 means switch is active
-            const isCarPresent = entryResponse.data[gateSettings.entryGateInput - 1] === '1';
+            // According to docs, input is `00000001` where the right-most '1' means switch is active for input 1
+            const isCarPresent = entryResponse.data[8 - gateSettings.entryGateInput] === '1';
             setCarAtEntry(isCarPresent);
             pollFailures.current.entry = 0; // Reset on success
             if (entryGateStatus === 'error') setEntryGateStatus('closed'); // Recover from error state
@@ -157,7 +157,6 @@ export function GateControl() {
           pollFailures.current.entry++;
         }
         if (pollFailures.current.entry >= MAX_FAILURES) {
-            console.error("Max polling failures reached for entry gate. Stopping polling for this gate.");
             if(entryGateStatus !== 'moving') setEntryGateStatus('error');
         }
       }
@@ -167,7 +166,7 @@ export function GateControl() {
         try {
             const exitResponse = await readGateSensor({ host: gateSettings.exitGateIp, port: gateSettings.exitGatePort });
             if (exitResponse.success && exitResponse.data) {
-                const isCarPresent = exitResponse.data[gateSettings.exitGateInput - 1] === '1';
+                const isCarPresent = exitResponse.data[8 - gateSettings.exitGateInput] === '1';
                 setCarAtExit(isCarPresent);
                 pollFailures.current.exit = 0; // Reset on success
                 if (exitGateStatus === 'error') setExitGateStatus('closed'); // Recover from error state
@@ -180,7 +179,6 @@ export function GateControl() {
             pollFailures.current.exit++;
         }
         if (pollFailures.current.exit >= MAX_FAILURES) {
-            console.error("Max polling failures reached for exit gate. Stopping polling for this gate.");
             if(exitGateStatus !== 'moving') setExitGateStatus('error');
         }
        }

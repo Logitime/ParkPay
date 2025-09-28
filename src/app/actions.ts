@@ -56,12 +56,7 @@ function sendCommandToRelay(host: string, port: number, command: string): Promis
             reject(err);
         });
         
-        client.on('close', (hadError) => {
-            if (!hadError) {
-                 // If the connection is closed gracefully but we haven't resolved the promise yet,
-                 // it means we didn't get the data we expected.
-                 reject(new Error('Connection closed before receiving data.'));
-            }
+        client.on('close', () => {
              console.log(`[Relay] Connection closed to ${host}:${port}`);
              clearTimeout(timer);
         });
@@ -73,7 +68,6 @@ function sendCommandToRelay(host: string, port: number, command: string): Promis
                 if (err) {
                    console.error('[Relay] Error writing command:', err);
                    client.destroy();
-                   clearTimeout(timer);
                    return reject(err);
                 }
                  console.log('[Relay] Command sent successfully.');
@@ -84,7 +78,6 @@ function sendCommandToRelay(host: string, port: number, command: string): Promis
             const response = data.toString().trim();
             console.log(`[Relay] Received from relay: '${response}'`);
             client.end(); // Gracefully close the connection
-            clearTimeout(timer);
             resolve(response);
         });
     });
@@ -131,7 +124,8 @@ export async function readGateSensor(input: z.infer<typeof ReadInputActionSchema
     
     try {
         const response = await sendCommandToRelay(host, port, command);
-        if (response.startsWith('input') && response.length === 13) { // "input" is 5 chars + 8 binary digits
+        // Expecting "input" + 8 binary digits, e.g. "input00000001"
+        if (response.startsWith('input') && response.length === 13) { 
             const binaryData = response.substring(5); 
             return { success: true, data: binaryData, message: 'Successfully read gate sensor.' };
         }

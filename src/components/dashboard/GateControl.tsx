@@ -213,6 +213,9 @@ export function GateControl() {
     const config = statusConfig[status];
     const isEntry = name === 'Entry';
     const isSensorError = status === 'error';
+    const failures = name === 'Entry' ? pollFailures.current.entry : pollFailures.current.exit;
+    const isSensorFailing = failures > 0 && failures < MAX_FAILURES;
+
 
     return (
       <div className="rounded-lg border p-4 space-y-4 bg-background">

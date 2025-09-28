@@ -8,6 +8,7 @@ import {
   Settings,
   Car,
   HandCoins,
+  Users,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import {
@@ -25,6 +26,7 @@ export function SidebarLinks() {
     { href: '/cashier', label: 'Cashier', icon: HandCoins },
     { href: '/gates', label: 'Gates', icon: Car },
     { href: '/zones', label: 'Zones', icon: ParkingSquare },
+    { href: '/parkers', label: 'Parkers', icon: Users },
     { href: '/reports', label: 'Reports', icon: BarChart3 },
     { href: '/settings', label: 'Settings', icon: Settings },
   ];

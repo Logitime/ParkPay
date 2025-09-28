@@ -30,9 +30,10 @@ type Cashier = {
 }
 
 type Tariff = {
-    id: number;
+    id: string;
     name: string;
-    rate: number;
+    description: string;
+    rate: string;
 }
 
 type Gate = {
@@ -72,10 +73,13 @@ export default function SettingsPage() {
 
     // Tariff Settings State
     const [tariffs, setTariffs] = useState<Tariff[]>([
-        { id: 1, name: "Hourly Rate", rate: 2.50 },
-        { id: 2, name: "Daily Maximum", rate: 20.00 },
-        { id: 3, name: "Lost Ticket Fee", rate: 50.00 },
-        { id: 4, name: "Weekend Surcharge", rate: 5.00 },
+        { id: 't1', name: "Visitor - 1st Hour", description: "Rate for the first hour of parking.", rate: "$5.00 /hr" },
+        { id: 't2', name: "Visitor - Hours 2-4", description: "Rate for the next 3 hours.", rate: "$4.00 /hr" },
+        { id: 't3', name: "Visitor - Hours 5-8", description: "Rate for the next 4 hours.", rate: "$3.00 /hr" },
+        { id: 't4', name: "Visitor - After 8 Hours", description: "Rate for each hour after the 8th.", rate: "$2.00 /hr" },
+        { id: 't5', name: "Monthly Pass", description: "Flat rate for monthly subscribers.", rate: "$1200.00 /mo" },
+        { id: 't6', name: "Lost Ticket Fee", description: "Flat fee for lost or damaged tickets.", rate: "$50.00" },
+        { id: 't7', name: "VIP Parking", description: "Rate for designated VIP parkers.", rate: "$0.00" },
     ]);
     const [newTariffName, setNewTariffName] = useState("");
     const [newTariffRate, setNewTariffRate] = useState("");
@@ -151,7 +155,7 @@ export default function SettingsPage() {
 
     const handleAddNewTariff = () => {
         if (newTariffName && newTariffRate) {
-            setTariffs([...tariffs, { id: Date.now(), name: newTariffName, rate: parseFloat(newTariffRate) }]);
+            setTariffs([...tariffs, { id: Date.now().toString(), name: newTariffName, description: "New tariff", rate: newTariffRate }]);
             setNewTariffName("");
             setNewTariffRate("");
             toast({
@@ -349,16 +353,17 @@ export default function SettingsPage() {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Tariff Management</CardTitle>
-                                <CardDescription>Set parking rates and rules.</CardDescription>
+                                <CardDescription>Set parking rates and rules. These are used by the cashier page.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {tariffs.map(tariff => (
-                                    <div key={tariff.id} className="border rounded-lg p-4 flex justify-between items-center">
+                                    <div key={tariff.id} className="border rounded-lg p-4 flex justify-between items-start">
                                         <div>
                                             <p className="font-medium">{tariff.name}</p>
+                                            <p className="text-sm text-muted-foreground">{tariff.description}</p>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-lg font-semibold">${tariff.rate.toFixed(2)}</span>
+                                        <div className="flex items-center gap-2 flex-shrink-0">
+                                            <span className="text-lg font-semibold min-w-[80px] text-right">{tariff.rate}</span>
                                             <Button variant="outline" size="sm">Edit</Button>
                                         </div>
                                     </div>
@@ -381,7 +386,7 @@ export default function SettingsPage() {
                                             </div>
                                             <div className="grid grid-cols-4 items-center gap-4">
                                                 <Label htmlFor="tariff-rate" className="text-right">Rate ($)</Label>
-                                                <Input id="tariff-rate" type="number" value={newTariffRate} onChange={(e) => setNewTariffRate(e.target.value)} className="col-span-3" />
+                                                <Input id="tariff-rate" value={newTariffRate} onChange={(e) => setNewTariffRate(e.target.value)} className="col-span-3" />
                                             </div>
                                         </div>
                                         <DialogFooter>

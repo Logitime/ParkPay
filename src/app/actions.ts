@@ -38,32 +38,40 @@ function sendRelayCommand(host: string, port: number, command: string, waitForRe
     return new Promise((resolve, reject) => {
         const client = new net.Socket();
         const timeout = 5000; // 5-second timeout
+        console.log(`Attempting to connect to ${host}:${port}`);
 
         const timer = setTimeout(() => {
+            console.error(`Connection to ${host}:${port} timed out.`);
             client.destroy();
             reject(new Error('Relay command timed out'));
         }, timeout);
 
         client.on('error', (err) => {
+            console.error(`Relay connection error to ${host}:${port}:`, err);
             clearTimeout(timer);
             client.destroy();
             reject(err);
         });
 
         client.on('close', () => {
+            console.log(`Connection closed to ${host}:${port}`);
             clearTimeout(timer);
         });
 
         client.connect(port, host, () => {
             console.log(`Connected to relay at ${host}:${port}`);
+            console.log(`Sending command: ${command}`);
             client.write(command, (err) => {
                 if (err) {
+                    console.error(`Error writing command to relay:`, err);
                     clearTimeout(timer);
                     client.destroy();
                     return reject(err);
                 }
+                console.log(`Command sent successfully.`);
                 if (!waitForResponse) {
                     client.end(() => {
+                        console.log('Closing connection as no response is expected.');
                         clearTimeout(timer);
                         resolve("Command sent");
                     });
@@ -76,6 +84,7 @@ function sendRelayCommand(host: string, port: number, command: string, waitForRe
                 const response = data.toString().trim();
                 console.log(`Received from relay: ${response}`);
                 client.end(() => {
+                   console.log('Closing connection after receiving data.');
                    clearTimeout(timer);
                    resolve(response);
                 });
@@ -137,5 +146,6 @@ export async function readGateSensor(input: z.infer<typeof ReadInputActionSchema
         return { success: false, message: `Failed to read gate sensor: ${errorMessage}` };
     }
 }
+
 
 

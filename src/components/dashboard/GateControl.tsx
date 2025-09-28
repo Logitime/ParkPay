@@ -133,33 +133,53 @@ export function GateControl() {
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
+    const pollFailures = { entry: 0, exit: 0 };
+    const MAX_FAILURES = 3;
 
     const pollSensors = async () => {
       // Poll entry gate
-      try {
-        const entryResponse = await readGateSensor({ host: gateSettings.entryGateIp, port: gateSettings.entryGatePort });
-        if (entryResponse.success && entryResponse.data) {
-          const isCarPresent = entryResponse.data[gateSettings.entryGateInput - 1] === '1';
-          setCarAtEntry(isCarPresent);
-        } else if (!entryResponse.success) {
-           console.error("Error polling entry gate sensor:", entryResponse.message);
+      if (pollFailures.entry < MAX_FAILURES) {
+        try {
+          const entryResponse = await readGateSensor({ host: gateSettings.entryGateIp, port: gateSettings.entryGatePort });
+          if (entryResponse.success && entryResponse.data) {
+            const isCarPresent = entryResponse.data[gateSettings.entryGateInput - 1] === '1';
+            setCarAtEntry(isCarPresent);
+            pollFailures.entry = 0; // Reset on success
+          } else if (!entryResponse.success) {
+             console.error("Error polling entry gate sensor:", entryResponse.message);
+             pollFailures.entry++;
+          }
+        } catch (error) {
+          console.error("Error polling entry gate sensor:", error);
+          pollFailures.entry++;
         }
-      } catch (error) {
-        console.error("Error polling entry gate sensor:", error);
+        if (pollFailures.entry >= MAX_FAILURES) {
+            console.error("Max polling failures reached for entry gate. Stopping polling for this gate.");
+            if(entryGateStatus !== 'moving') setEntryGateStatus('error');
+        }
       }
       
       // Poll exit gate
-      try {
-        const exitResponse = await readGateSensor({ host: gateSettings.exitGateIp, port: gateSettings.exitGatePort });
-        if (exitResponse.success && exitResponse.data) {
-          const isCarPresent = exitResponse.data[gateSettings.exitGateInput - 1] === '1';
-          setCarAtExit(isCarPresent);
-        } else if (!exitResponse.success) {
-            console.error("Error polling exit gate sensor:", exitResponse.message);
+       if (pollFailures.exit < MAX_FAILURES) {
+        try {
+            const exitResponse = await readGateSensor({ host: gateSettings.exitGateIp, port: gateSettings.exitGatePort });
+            if (exitResponse.success && exitResponse.data) {
+            const isCarPresent = exitResponse.data[gateSettings.exitGateInput - 1] === '1';
+            setCarAtExit(isCarPresent);
+            pollFailures.exit = 0; // Reset on success
+            } else if (!exitResponse.success) {
+                console.error("Error polling exit gate sensor:", exitResponse.message);
+                pollFailures.exit++;
+            }
+        } catch (error) {
+            console.error("Error polling exit gate sensor:", error);
+            pollFailures.exit++;
         }
-      } catch (error) {
-        console.error("Error polling exit gate sensor:", error);
-      }
+        if (pollFailures.exit >= MAX_FAILURES) {
+            console.error("Max polling failures reached for exit gate. Stopping polling for this gate.");
+            if(exitGateStatus !== 'moving') setExitGateStatus('error');
+        }
+       }
     };
     
     if (isPolling) {
@@ -172,7 +192,7 @@ export function GateControl() {
             clearInterval(intervalId);
         }
     };
-  }, [isPolling]);
+  }, [isPolling, entryGateStatus, exitGateStatus]);
 
 
   const Gate = ({

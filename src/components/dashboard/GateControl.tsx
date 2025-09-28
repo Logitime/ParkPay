@@ -195,7 +195,7 @@ export function GateControl() {
       <div className="rounded-lg border p-4 space-y-4 bg-background">
         <div className="flex justify-between items-center">
           <h3 className="font-semibold">{name} Gate</h3>
-           <div className={`flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-full ${carDetected ? 'bg-yellow-400 text-yellow-900' : 'bg-gray-200 text-gray-600'}`}>
+           <div className={`flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-full ${carDetected ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'}`}>
                 <Car className="size-4" />
                 <span>{carDetected ? 'Car Detected' : 'No Car'}</span>
             </div>

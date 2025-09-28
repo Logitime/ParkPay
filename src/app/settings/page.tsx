@@ -59,13 +59,41 @@ export default function SettingsPage() {
                                 <CardDescription>Configure entry and exit gate settings.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                               <div className="space-y-2">
-                                    <Label htmlFor="entry-gate-ip">Entry Gate IP Address</Label>
-                                    <Input id="entry-gate-ip" placeholder="192.168.1.10" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="exit-gate-ip">Exit Gate IP Address</Label>
-                                    <Input id="exit-gate-ip" placeholder="192.168.1.11" />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <Card className="p-4">
+                                        <h3 className="text-lg font-semibold mb-4">Entry Gate</h3>
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="entry-gate-ip">Relay IP Address</Label>
+                                                <Input id="entry-gate-ip" placeholder="192.168.1.10" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="entry-gate-input">Car Detect Port (Input)</Label>
+                                                <Input id="entry-gate-input" type="number" placeholder="1" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="entry-gate-output">Open Gate Port (Output)</Label>
+                                                <Input id="entry-gate-output" type="number" placeholder="1" />
+                                            </div>
+                                        </div>
+                                    </Card>
+                                    <Card className="p-4">
+                                        <h3 className="text-lg font-semibold mb-4">Exit Gate</h3>
+                                         <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="exit-gate-ip">Relay IP Address</Label>
+                                                <Input id="exit-gate-ip" placeholder="192.168.1.11" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="exit-gate-input">Car Detect Port (Input)</Label>
+                                                <Input id="exit-gate-input" type="number" placeholder="2" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="exit-gate-output">Open Gate Port (Output)</Label>
+                                                <Input id="exit-gate-output" type="number" placeholder="2" />
+                                            </div>
+                                        </div>
+                                    </Card>
                                 </div>
                                 <div className="flex items-center justify-between space-x-2 p-4 border rounded-lg">
                                     <div className="space-y-0.5">

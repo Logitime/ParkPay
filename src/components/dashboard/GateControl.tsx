@@ -18,6 +18,7 @@ import {
   QrCode,
   TriangleAlert,
   Loader2,
+  Car,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';

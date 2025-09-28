@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea";
 import { mockCashiers } from "@/lib/mock-data";
 import { Combobox } from "@/components/ui/combobox";
+import { Badge } from "@/components/ui/badge";
 
 type Zone = {
     id: number;

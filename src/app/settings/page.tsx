@@ -40,10 +40,12 @@ export default function SettingsPage() {
     const [emailNotifications, setEmailNotifications] = useState(true);
 
     // Gate Settings State
-    const [entryGateIp, setEntryGateIp] = useState("192.168.1.10");
+    const [entryGateIp, setEntryGateIp] = useState("10.0.0.185");
+    const [entryGatePort, setEntryGatePort] = useState("5000");
     const [entryGateInput, setEntryGateInput] = useState("1");
     const [entryGateOutput, setEntryGateOutput] = useState("1");
     const [exitGateIp, setExitGateIp] = useState("192.168.1.11");
+    const [exitGatePort, setExitGatePort] = useState("5000");
     const [exitGateInput, setExitGateInput] = useState("2");
     const [exitGateOutput, setExitGateOutput] = useState("2");
     const [autoOpen, setAutoOpen] = useState(true);
@@ -180,6 +182,10 @@ export default function SettingsPage() {
                                                 <Label htmlFor="entry-gate-ip">Relay IP Address</Label>
                                                 <Input id="entry-gate-ip" value={entryGateIp} onChange={(e) => setEntryGateIp(e.target.value)} placeholder="192.168.1.10" />
                                             </div>
+                                             <div className="space-y-2">
+                                                <Label htmlFor="entry-gate-port">Network Port</Label>
+                                                <Input id="entry-gate-port" type="number" value={entryGatePort} onChange={(e) => setEntryGatePort(e.target.value)} placeholder="5000" />
+                                            </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="entry-gate-input">Car Detect Port (Input)</Label>
                                                 <Input id="entry-gate-input" type="number" value={entryGateInput} onChange={(e) => setEntryGateInput(e.target.value)} placeholder="1" />
@@ -196,6 +202,10 @@ export default function SettingsPage() {
                                             <div className="space-y-2">
                                                 <Label htmlFor="exit-gate-ip">Relay IP Address</Label>
                                                 <Input id="exit-gate-ip" value={exitGateIp} onChange={(e) => setExitGateIp(e.target.value)} placeholder="192.168.1.11" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="exit-gate-port">Network Port</Label>
+                                                <Input id="exit-gate-port" type="number" value={exitGatePort} onChange={(e) => setExitGatePort(e.target.value)} placeholder="5000" />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="exit-gate-input">Car Detect Port (Input)</Label>
@@ -383,5 +393,3 @@ export default function SettingsPage() {
         </div>
     )
 }
-
-    

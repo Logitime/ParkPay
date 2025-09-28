@@ -136,8 +136,11 @@ export function GateControl() {
       try {
         const entryResponse = await readGateSensor({ host: gateSettings.entryGateIp, port: gateSettings.entryGatePort });
         if (entryResponse.success && entryResponse.data) {
-          const isCarPresent = entryResponse.data[gateSettings.entryGateInput - 1] === '0'; // Assuming '0' means detected
+          // The relay returns '1' when the input is active (car detected)
+          const isCarPresent = entryResponse.data[gateSettings.entryGateInput - 1] === '1';
           setCarAtEntry(isCarPresent);
+        } else if (!entryResponse.success) {
+           console.error("Error polling entry gate sensor:", entryResponse.message);
         }
       } catch (error) {
         console.error("Error polling entry gate sensor:", error);
@@ -147,8 +150,10 @@ export function GateControl() {
       try {
         const exitResponse = await readGateSensor({ host: gateSettings.exitGateIp, port: gateSettings.exitGatePort });
         if (exitResponse.success && exitResponse.data) {
-          const isCarPresent = exitResponse.data[gateSettings.exitGateInput - 1] === '0';
+          const isCarPresent = exitResponse.data[gateSettings.exitGateInput - 1] === '1';
           setCarAtExit(isCarPresent);
+        } else if (!exitResponse.success) {
+            console.error("Error polling exit gate sensor:", exitResponse.message);
         }
       } catch (error) {
         console.error("Error polling exit gate sensor:", error);

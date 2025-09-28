@@ -117,8 +117,13 @@ export async function readGateSensor(input: z.infer<typeof ReadInputActionSchema
     
     try {
         const response = await sendRelayCommand(host, port, 'input', true); // Wait for a response
-        // Assuming the response is a binary string like '11110000'
-        return { success: true, data: response, message: 'Successfully read gate sensor.' };
+        // Expected response is 'input' followed by an 8-digit binary string, e.g., 'input00000001'
+        if (response.startsWith('input') && response.length === 13) {
+            const binaryData = response.substring(5); // Extract the 8-digit binary string
+            return { success: true, data: binaryData, message: 'Successfully read gate sensor.' };
+        }
+        return { success: false, message: `Unexpected response from relay: ${response}` };
+
     } catch (e) {
         const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
         return { success: false, message: `Failed to read gate sensor: ${errorMessage}` };

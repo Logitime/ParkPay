@@ -53,10 +53,14 @@ const mockCashiers = [
     { id: 3, name: "Admin User", assignedGateId: null }, // Admin can operate any
 ];
 
-// New complex tariff calculation
-const calculateFee = (durationMinutes: number, ticketType?: 'vip' | 'monthly') => {
+// New complex tariff calculation based on settings.
+// In a real app, this would come from a shared config or API.
+const calculateFee = (durationMinutes: number, ticketType?: 'vip' | 'lost' | 'monthly') => {
     if (ticketType === 'vip' || ticketType === 'monthly') {
         return 0.00;
+    }
+    if (ticketType === 'lost') {
+        return 50.00; // Lost ticket fee
     }
     
     if (durationMinutes <= 0) return 0;
@@ -65,12 +69,15 @@ const calculateFee = (durationMinutes: number, ticketType?: 'vip' | 'monthly') =
     const hours = Math.ceil(durationMinutes / 60);
 
     if (hours <= 1) {
+        // 1st hour rate
         fee = 5;
-    } else if (hours <= 4) { // 1st hour + next 3 hours
+    } else if (hours <= 4) {
+        // 1st hour + next 3 hours
         fee = 5 + (hours - 1) * 4;
-    } else if (hours <= 8) { // 1st hour + next 3 hours + next 4 hours
+    } else if (hours <= 8) {
+        // 1st hour + next 3 hours + next 4 hours
         fee = 5 + (3 * 4) + (hours - 4) * 3;
-    } else { // After 8 hours
+    } else { // After 8 hours (up to 24)
         fee = 5 + (3 * 4) + (4 * 3) + (hours - 8) * 2;
     }
     
@@ -99,7 +106,7 @@ export default function CashierPage() {
     useEffect(() => {
         if (activeTicket) {
             const diff = currentTime.getTime() - activeTicket.entryTime.getTime();
-            const totalMinutes = Math.floor(diff / (1000 * 60));
+            const totalMinutes = Math.max(0, Math.floor(diff / (1000 * 60)));
             const hours = Math.floor(totalMinutes / 60);
             const minutes = totalMinutes % 60;
             setDuration({ hours, minutes });
@@ -109,10 +116,13 @@ export default function CashierPage() {
 
     const handleFindTicket = () => {
         setPaymentProcessed(false);
+        setActiveTicket(null);
+
         if (ticketId.toLowerCase() === 'lost') {
-            setActiveTicket({ id: "LOST TICKET", entryTime: new Date(), plate: "N/A", status: "Lost" });
-            setFee(50); // Use the fixed lost ticket fee from tariff settings
+             const lostTicket = { id: "LOST TICKET", entryTime: new Date(), plate: "N/A", status: "Lost", type: 'lost' };
+            setActiveTicket(lostTicket);
             setDuration({hours: 0, minutes: 0});
+            setFee(calculateFee(0, 'lost'));
              toast({
                 variant: "destructive",
                 title: "Lost Ticket",
@@ -129,7 +139,6 @@ export default function CashierPage() {
                 description: `Displaying details for ticket ${foundTicket.id}.`,
             });
         } else {
-            setActiveTicket(null);
             toast({
                 variant: "destructive",
                 title: "Ticket Not Found",
@@ -167,7 +176,6 @@ export default function CashierPage() {
             output: parseInt(assignedGate.output, 10),
         }
 
-        const command = `on${gateToOpen.output}`;
         const { success, message } = await controlGate({ ...gateToOpen, action: 'open' });
         
         if (success) {
@@ -262,7 +270,9 @@ export default function CashierPage() {
                                             </div>
                                         </div>
                                     </div>
-                                     {activeTicket.type === 'vip' && <Badge className="w-fit">VIP Parker</Badge>}
+                                    {(activeTicket.type === 'vip' || activeTicket.type === 'monthly') && 
+                                        <Badge className="w-fit">{activeTicket.type.charAt(0).toUpperCase() + activeTicket.type.slice(1)} Parker</Badge>
+                                    }
                                     <Card className="bg-muted/50">
                                         <CardContent className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
                                             <div className="flex flex-col items-center justify-center space-y-1">

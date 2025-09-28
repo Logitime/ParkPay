@@ -97,6 +97,7 @@ export function GateControl() {
 
     if (currentStatus === 'moving') return;
 
+    const previousStatus = currentStatus;
     setStatus('moving');
 
     const settings = gate === 'entry' ? {
@@ -121,7 +122,7 @@ export function GateControl() {
             description: message,
         });
     } else {
-        setStatus('error');
+        setStatus(previousStatus === 'moving' ? 'error' : previousStatus);
         toast({
             variant: 'destructive',
             title: `Gate Action Failed: ${gate}`,

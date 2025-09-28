@@ -58,11 +58,15 @@ function sendRelayCommand(host: string, port: number, command: string, waitForRe
             console.log(`Connected to relay at ${host}:${port}`);
             client.write(command, (err) => {
                 if (err) {
+                    clearTimeout(timer);
+                    client.destroy();
                     return reject(err);
                 }
                 if (!waitForResponse) {
-                    client.end();
-                    resolve("Command sent");
+                    client.end(() => {
+                        clearTimeout(timer);
+                        resolve("Command sent");
+                    });
                 }
             });
         });
@@ -71,8 +75,10 @@ function sendRelayCommand(host: string, port: number, command: string, waitForRe
             client.on('data', (data) => {
                 const response = data.toString().trim();
                 console.log(`Received from relay: ${response}`);
-                client.end();
-                resolve(response);
+                client.end(() => {
+                   clearTimeout(timer);
+                   resolve(response);
+                });
             });
         }
     });
@@ -95,7 +101,7 @@ export async function controlGate(input: z.infer<typeof GateActionSchema>): Prom
     const command = `all${commandString.join('')}`;
     
     try {
-        const response = await sendRelayCommand(host, port, command, false);
+        await sendRelayCommand(host, port, command, false);
         return { success: true, message: `Gate ${action} command sent successfully.` };
     } catch (e) {
         const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
@@ -131,4 +137,5 @@ export async function readGateSensor(input: z.infer<typeof ReadInputActionSchema
         return { success: false, message: `Failed to read gate sensor: ${errorMessage}` };
     }
 }
+
 

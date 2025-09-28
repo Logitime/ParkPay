@@ -28,9 +28,8 @@ export function SidebarLinks() {
     <SidebarMenu>
       {links.map((link) => (
         <SidebarMenuItem key={link.href}>
-          <Link href={link.href} legacyBehavior passHref>
+          <Link href={link.href}>
             <SidebarMenuButton
-              as="a"
               isActive={pathname === link.href}
               tooltip={link.label}
             >

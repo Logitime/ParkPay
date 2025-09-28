@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Car, DollarSign, ParkingSquare, Settings, User } from "lucide-react";
+import { Car, DollarSign, ParkingSquare, Settings, User, KeyRound } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 
 type Zone = {
@@ -24,7 +24,8 @@ type Cashier = {
     id: number;
     name: string;
     email: string;
-    role: 'admin' | 'editor' | 'viewer';
+    role: 'admin' | 'cashier' | 'viewer';
+    assignedGateId: number | null;
 }
 
 type Tariff = {
@@ -78,11 +79,13 @@ export default function SettingsPage() {
 
     // Cashier Settings State
     const [cashiers, setCashiers] = useState<Cashier[]>([
-        { id: 1, name: "John Doe", email: "john.doe@example.com", role: "editor" },
-        { id: 2, name: "Jane Smith", email: "jane.smith@example.com", role: "viewer" },
+        { id: 1, name: "John Doe", email: "john.doe@example.com", role: "cashier", assignedGateId: 2 },
+        { id: 2, name: "Jane Smith", email: "jane.smith@example.com", role: "viewer", assignedGateId: null },
+        { id: 3, name: "Admin User", email: "admin@parkpay.co", role: "admin", assignedGateId: null },
     ]);
     const [newCashierName, setNewCashierName] = useState("");
     const [newCashierEmail, setNewCashierEmail] = useState("");
+    const [newCashierGateId, setNewCashierGateId] = useState<string | null>(null);
 
 
     const handleSaveChanges = (section: string) => {
@@ -130,9 +133,10 @@ export default function SettingsPage() {
     
     const handleAddNewCashier = () => {
         if (newCashierName && newCashierEmail) {
-            setCashiers([...cashiers, { id: Date.now(), name: newCashierName, email: newCashierEmail, role: 'editor' }]);
+            setCashiers([...cashiers, { id: Date.now(), name: newCashierName, email: newCashierEmail, role: 'cashier', assignedGateId: newCashierGateId ? parseInt(newCashierGateId) : null }]);
             setNewCashierName("");
             setNewCashierEmail("");
+            setNewCashierGateId(null);
             toast({
                 title: "New Cashier Added",
                 description: `Cashier "${newCashierName}" has been created.`,
@@ -152,9 +156,10 @@ export default function SettingsPage() {
         }
     };
     
-    const handleCashierRoleChange = (cashierId: number, newRole: Cashier['role']) => {
-        setCashiers(cashiers.map(c => c.id === cashierId ? { ...c, role: newRole } : c));
+    const handleCashierChange = (cashierId: number, field: keyof Cashier, value: any) => {
+        setCashiers(cashiers.map(c => c.id === cashierId ? { ...c, [field]: value } : c));
     };
+
 
     return (
         <div className="flex flex-col h-full">
@@ -377,27 +382,53 @@ export default function SettingsPage() {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Cashier Management</CardTitle>
-                                <CardDescription>Manage cashier accounts and permissions.</CardDescription>
+                                <CardDescription>Manage cashier accounts, roles, and gate assignments.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                               {cashiers.map(cashier => (
-                                   <div key={cashier.id} className="border rounded-lg p-4 flex justify-between items-center">
-                                        <div>
-                                            <p className="font-medium">{cashier.name}</p>
-                                            <p className="text-sm text-muted-foreground">{cashier.email}</p>
+                               {cashiers.map(cashier => {
+                                   const assignedGate = gates.find(g => g.id === cashier.assignedGateId);
+                                   return (
+                                       <div key={cashier.id} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                            <div className="grid gap-4 flex-1">
+                                                <div>
+                                                    <p className="font-medium">{cashier.name}</p>
+                                                    <p className="text-sm text-muted-foreground">{cashier.email}</p>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <KeyRound className="size-4 text-muted-foreground" />
+                                                    <Select value={cashier.role} onValueChange={(value: Cashier['role']) => handleCashierChange(cashier.id, 'role', value)}>
+                                                        <SelectTrigger className="w-[120px]">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="admin">Admin</SelectItem>
+                                                            <SelectItem value="cashier">Cashier</SelectItem>
+                                                            <SelectItem value="viewer">Viewer</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Car className="size-4 text-muted-foreground" />
+                                                 <Select 
+                                                    value={cashier.assignedGateId?.toString() ?? 'none'} 
+                                                    onValueChange={(value) => handleCashierChange(cashier.id, 'assignedGateId', value === 'none' ? null : parseInt(value))}
+                                                    disabled={cashier.role !== 'cashier'}
+                                                >
+                                                    <SelectTrigger className="w-[180px]">
+                                                        <SelectValue placeholder="Assign a gate" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="none">None</SelectItem>
+                                                        {gates.filter(g => g.name.toLowerCase().includes('exit')).map(gate => (
+                                                            <SelectItem key={gate.id} value={gate.id.toString()}>{gate.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
                                         </div>
-                                        <Select value={cashier.role} onValueChange={(value: Cashier['role']) => handleCashierRoleChange(cashier.id, value)}>
-                                            <SelectTrigger className="w-[120px]">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="admin">Admin</SelectItem>
-                                                <SelectItem value="editor">Cashier</SelectItem>
-                                                <SelectItem value="viewer">Viewer</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                               ))}
+                                   )
+                               })}
                                 <Dialog>
                                     <DialogTrigger asChild>
                                         <Button>Add New Cashier</Button>
@@ -418,6 +449,19 @@ export default function SettingsPage() {
                                                 <Label htmlFor="cashier-email" className="text-right">Email</Label>
                                                 <Input id="cashier-email" type="email" value={newCashierEmail} onChange={(e) => setNewCashierEmail(e.target.value)} className="col-span-3" />
                                             </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="cashier-gate" className="text-right">Assign Gate</Label>
+                                                 <Select value={newCashierGateId ?? undefined} onValueChange={setNewCashierGateId}>
+                                                    <SelectTrigger className="col-span-3">
+                                                        <SelectValue placeholder="Select an exit gate" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {gates.filter(g => g.name.toLowerCase().includes('exit')).map(gate => (
+                                                            <SelectItem key={gate.id} value={gate.id.toString()}>{gate.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
                                         </div>
                                         <DialogFooter>
                                             <DialogClose asChild>
@@ -427,6 +471,9 @@ export default function SettingsPage() {
                                     </DialogContent>
                                 </Dialog>                            
                             </CardContent>
+                             <CardContent>
+                                <Button onClick={() => handleSaveChanges('Cashier')}>Save All Cashier Settings</Button>
+                            </CardContent>
                         </Card>
                     </TabsContent>
                 </Tabs>
@@ -434,3 +481,5 @@ export default function SettingsPage() {
         </div>
     )
 }
+
+    

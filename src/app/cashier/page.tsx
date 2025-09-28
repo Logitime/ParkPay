@@ -11,8 +11,9 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Clock, DollarSign, QrCode, Ticket, Car, CheckCircle } from "lucide-react";
+import { Clock, DollarSign, QrCode, Ticket, Car, CheckCircle, MonitorSpeaker } from "lucide-react";
 import { controlGate } from "@/app/actions";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,7 +23,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
 
@@ -37,14 +37,21 @@ const mockTransactions = [
     { ticketId: "T84B2-1", plate: "AD-4589", exit: "11:45 AM", status: "Paid", amount: "$4.50" },
     { ticketId: "T84B2-2", plate: "BC-9102", exit: "12:01 PM", status: "Paid", amount: "$4.50" },
     { ticketId: "T84B2-4", plate: "DE-4455", exit: "11:30 AM", status: "Paid", amount: "$2.00" },
-]
+];
 
-// Hardcoded exit gate settings for now
-const exitGateSettings = {
-    host: "192.168.1.11",
-    port: 5000,
-    output: 2,
-};
+// Mock data fetched from settings
+const mockGates = [
+    { id: 1, name: "Entry Gate", ip: "10.0.0.185", port: "5000", output: "1" },
+    { id: 2, name: "Exit Gate", ip: "192.168.1.11", port: "5000", output: "2" },
+    { id: 3, name: "Garage P2 Exit", ip: "192.168.1.12", port: "5000", output: "3" },
+];
+
+const mockCashiers = [
+    { id: 1, name: "John Doe", assignedGateId: 2 },
+    { id: 2, name: "Jane Smith", assignedGateId: 3 },
+    { id: 3, name: "Admin User", assignedGateId: null }, // Admin can operate any
+];
+
 
 // Simple tariff calculation
 const calculateFee = (durationMinutes: number) => {
@@ -64,7 +71,11 @@ export default function CashierPage() {
     const [duration, setDuration] = useState({ hours: 0, minutes: 0 });
     const [fee, setFee] = useState(0);
     const [paymentProcessed, setPaymentProcessed] = useState(false);
+    const [activeCashierId, setActiveCashierId] = useState<string | undefined>(mockCashiers[0].id.toString());
 
+    const activeCashier = activeCashierId ? mockCashiers.find(c => c.id === parseInt(activeCashierId, 10)) : null;
+    const assignedGate = activeCashier?.assignedGateId ? mockGates.find(g => g.id === activeCashier.assignedGateId) : null;
+    
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
         return () => clearInterval(timer);
@@ -110,20 +121,30 @@ export default function CashierPage() {
     }
 
     const handleOpenGate = async () => {
+        if (!activeCashier) {
+             toast({ variant: "destructive", title: "No Cashier Selected", description: "Please select a cashier station." });
+             return;
+        }
+        if (!assignedGate) {
+             toast({ variant: "destructive", title: "No Gate Assigned", description: `Cashier ${activeCashier.name} is not assigned to an exit gate.` });
+             return;
+        }
         if (!paymentProcessed) {
-            toast({
-                variant: "destructive",
-                title: "Payment Required",
-                description: "Payment must be processed before opening the gate.",
-            });
+            toast({ variant: "destructive", title: "Payment Required", description: "Payment must be processed before opening the gate." });
             return;
         }
 
-        const { success, message } = await controlGate({ ...exitGateSettings, action: 'open' });
+        const gateToOpen = {
+            host: assignedGate.ip,
+            port: parseInt(assignedGate.port, 10),
+            output: parseInt(assignedGate.output, 10),
+        }
+
+        const { success, message } = await controlGate({ ...gateToOpen, action: 'open' });
         
         if (success) {
             toast({
-                title: "Gate Opening",
+                title: `Opening ${assignedGate.name}`,
                 description: "Exit gate opening command sent.",
             });
             // Reset after successful exit
@@ -153,7 +174,25 @@ export default function CashierPage() {
                                     <CardTitle>Exit Processing</CardTitle>
                                     <CardDescription>Scan ticket, calculate fees, and process payment.</CardDescription>
                                 </div>
-                                <QrCode className="h-8 w-8 text-primary" />
+                                <div className="flex items-center gap-4">
+                                     <div className="w-[200px]">
+                                        <Select value={activeCashierId} onValueChange={setActiveCashierId}>
+                                            <SelectTrigger>
+                                                <div className="flex items-center gap-2">
+                                                    <MonitorSpeaker className="size-4 text-muted-foreground" />
+                                                    <SelectValue placeholder="Select Station" />
+                                                </div>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {mockCashiers.map(c => (
+                                                    <SelectItem key={c.id} value={c.id.toString()}>{c.name}'s Station</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        {assignedGate && <p className="text-xs text-muted-foreground mt-1">Controls: <span className="font-semibold">{assignedGate.name}</span></p>}
+                                    </div>
+                                    <QrCode className="h-8 w-8 text-primary" />
+                                </div>
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-6">
@@ -241,7 +280,7 @@ export default function CashierPage() {
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
-                            <Button onClick={handleOpenGate} disabled={!activeTicket || !paymentProcessed}>Open Exit Gate</Button>
+                            <Button onClick={handleOpenGate} disabled={!activeTicket || !paymentProcessed}>Open {assignedGate?.name || 'Exit Gate'}</Button>
                         </CardFooter>
                     </Card>
                 </div>
@@ -280,3 +319,5 @@ export default function CashierPage() {
         </div>
     )
 }
+
+    

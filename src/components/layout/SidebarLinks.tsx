@@ -28,15 +28,14 @@ export function SidebarLinks() {
     <SidebarMenu>
       {links.map((link) => (
         <SidebarMenuItem key={link.href}>
-          <Link href={link.href}>
+          <Link href={link.href} legacyBehavior passHref>
             <SidebarMenuButton
+              as="a"
               isActive={pathname === link.href}
               tooltip={link.label}
             >
-              <span>
-                <link.icon />
-                <span>{link.label}</span>
-              </span>
+              <link.icon />
+              <span>{link.label}</span>
             </SidebarMenuButton>
           </Link>
         </SidebarMenuItem>

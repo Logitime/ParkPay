@@ -12,6 +12,7 @@ SidebarMenu,
 SidebarMenuItem,
 SidebarMenuButton,
 } from '@/components/ui/sidebar';
+import Link from 'next/link';
   
 export function SidebarLinks() {
 const pathname = usePathname();
@@ -27,14 +28,16 @@ return (
     <SidebarMenu>
     {links.map((link) => (
         <SidebarMenuItem key={link.href}>
-        <SidebarMenuButton
-            href={link.href}
-            isActive={pathname === link.href}
-            tooltip={link.label}
-        >
+        <Link href={link.href} passHref legacyBehavior>
+          <SidebarMenuButton
+              as="a"
+              isActive={pathname === link.href}
+              tooltip={link.label}
+          >
             <link.icon />
             <span>{link.label}</span>
-        </SidebarMenuButton>
+          </SidebarMenuButton>
+        </Link>
         </SidebarMenuItem>
     ))}
     </SidebarMenu>

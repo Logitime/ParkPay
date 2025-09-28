@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { controlGate, readGateSensor } from '@/app/actions';
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -88,6 +88,9 @@ export function GateControl() {
   const [isPolling, setIsPolling] = useState(false);
   const { toast } = useToast();
 
+  const pollFailures = useRef({ entry: 0, exit: 0 });
+  const MAX_FAILURES = 3;
+
   const handleGateAction = async (
     gate: 'entry' | 'exit',
     action: 'open' | 'close'
@@ -132,50 +135,50 @@ export function GateControl() {
   };
 
   useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-    const pollFailures = { entry: 0, exit: 0 };
-    const MAX_FAILURES = 3;
+    let intervalId: NodeJS.Timeout | null = null;
 
     const pollSensors = async () => {
       // Poll entry gate
-      if (pollFailures.entry < MAX_FAILURES) {
+      if (pollFailures.current.entry < MAX_FAILURES) {
         try {
           const entryResponse = await readGateSensor({ host: gateSettings.entryGateIp, port: gateSettings.entryGatePort });
           if (entryResponse.success && entryResponse.data) {
             const isCarPresent = entryResponse.data[gateSettings.entryGateInput - 1] === '1';
             setCarAtEntry(isCarPresent);
-            pollFailures.entry = 0; // Reset on success
-          } else if (!entryResponse.success) {
+            pollFailures.current.entry = 0; // Reset on success
+            if (entryGateStatus === 'error') setEntryGateStatus('closed'); // Recover from error state
+          } else {
              console.error("Error polling entry gate sensor:", entryResponse.message);
-             pollFailures.entry++;
+             pollFailures.current.entry++;
           }
         } catch (error) {
           console.error("Error polling entry gate sensor:", error);
-          pollFailures.entry++;
+          pollFailures.current.entry++;
         }
-        if (pollFailures.entry >= MAX_FAILURES) {
+        if (pollFailures.current.entry >= MAX_FAILURES) {
             console.error("Max polling failures reached for entry gate. Stopping polling for this gate.");
             if(entryGateStatus !== 'moving') setEntryGateStatus('error');
         }
       }
       
       // Poll exit gate
-       if (pollFailures.exit < MAX_FAILURES) {
+       if (pollFailures.current.exit < MAX_FAILURES) {
         try {
             const exitResponse = await readGateSensor({ host: gateSettings.exitGateIp, port: gateSettings.exitGatePort });
             if (exitResponse.success && exitResponse.data) {
-            const isCarPresent = exitResponse.data[gateSettings.exitGateInput - 1] === '1';
-            setCarAtExit(isCarPresent);
-            pollFailures.exit = 0; // Reset on success
-            } else if (!exitResponse.success) {
+                const isCarPresent = exitResponse.data[gateSettings.exitGateInput - 1] === '1';
+                setCarAtExit(isCarPresent);
+                pollFailures.current.exit = 0; // Reset on success
+                if (exitGateStatus === 'error') setExitGateStatus('closed'); // Recover from error state
+            } else {
                 console.error("Error polling exit gate sensor:", exitResponse.message);
-                pollFailures.exit++;
+                pollFailures.current.exit++;
             }
         } catch (error) {
             console.error("Error polling exit gate sensor:", error);
-            pollFailures.exit++;
+            pollFailures.current.exit++;
         }
-        if (pollFailures.exit >= MAX_FAILURES) {
+        if (pollFailures.current.exit >= MAX_FAILURES) {
             console.error("Max polling failures reached for exit gate. Stopping polling for this gate.");
             if(exitGateStatus !== 'moving') setExitGateStatus('error');
         }
@@ -215,9 +218,13 @@ export function GateControl() {
       <div className="rounded-lg border p-4 space-y-4 bg-background">
         <div className="flex justify-between items-center">
           <h3 className="font-semibold">{name} Gate</h3>
-           <div className={`flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-full ${carDetected ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'}`}>
+           <div className={cn(
+               'flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-full', 
+               status === 'error' ? 'bg-destructive text-destructive-foreground' : 
+               carDetected ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'
+            )}>
                 <Car className="size-4" />
-                <span>{carDetected ? 'Car Detected' : 'No Car'}</span>
+                <span>{ status === 'error' ? 'Sensor Error' : carDetected ? 'Car Detected' : 'No Car'}</span>
             </div>
           <div
             className={cn(
@@ -232,7 +239,7 @@ export function GateControl() {
         <div className="flex gap-2">
           <Button
             onClick={onOpen}
-            disabled={status === 'open' || status === 'moving'}
+            disabled={status === 'open' || status === 'moving' || status === 'error'}
             className="w-full"
             variant="outline"
           >
@@ -240,7 +247,7 @@ export function GateControl() {
           </Button>
           <Button
             onClick={onClose}
-            disabled={status === 'closed' || status === 'moving'}
+            disabled={status === 'closed' || status === 'moving' || status === 'error'}
             className="w-full"
             variant="outline"
           >
@@ -251,7 +258,7 @@ export function GateControl() {
           {isEntry ? (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button className="w-full" variant="secondary" disabled={!carDetected}>
+                <Button className="w-full" variant="secondary" disabled={!carDetected || status === 'error'}>
                   <Ticket className="mr-2 size-4" /> Issue Ticket
                 </Button>
               </AlertDialogTrigger>
@@ -270,7 +277,7 @@ export function GateControl() {
           ) : (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button className="w-full" variant="secondary">
+                <Button className="w-full" variant="secondary" disabled={status === 'error'}>
                   <QrCode className="mr-2 size-4" /> Scan Ticket
                 </Button>
               </AlertDialogTrigger>

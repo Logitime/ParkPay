@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter,
 } from '@/components/ui/card';
 import {
   Table,
@@ -25,8 +26,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
+  DialogClose,
 } from '@/components/ui/dialog';
-import { Car, Clock, DollarSign, DoorOpen, User } from 'lucide-react';
+import { Car, Clock, DollarSign, DoorOpen, User, Printer } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const transactions = [
   {
@@ -199,6 +203,10 @@ export function TransactionsTable() {
     </div>
   );
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -256,7 +264,7 @@ export function TransactionsTable() {
           </ScrollArea>
 
           {selectedTransaction && (
-            <DialogContent>
+            <DialogContent className="printable-area">
               <DialogHeader>
                 <DialogTitle>Transaction: {selectedTransaction.ticketId}</DialogTitle>
               </DialogHeader>
@@ -296,6 +304,15 @@ export function TransactionsTable() {
                   }
                 />
               </div>
+              <DialogFooter className="no-print">
+                <Button variant="outline" onClick={handlePrint}>
+                  <Printer className="mr-2" />
+                  Print
+                </Button>
+                <DialogClose asChild>
+                  <Button>Close</Button>
+                </DialogClose>
+              </DialogFooter>
             </DialogContent>
           )}
         </Dialog>

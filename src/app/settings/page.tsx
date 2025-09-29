@@ -535,7 +535,7 @@ export default function SettingsPage() {
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <div>
                                     <CardTitle>Shift Management</CardTitle>
-                                    <CardDescription>Define work shifts and assign cashiers.</CardDescription>
+                                    <CardDescription>Define work shifts and assign users.</CardDescription>
                                 </div>
                                 <Button onClick={handleAddShift}>Add New Shift</Button>
                             </CardHeader>
@@ -554,7 +554,7 @@ export default function SettingsPage() {
                                              </div>
                                         </CardHeader>
                                         <CardContent>
-                                            <p className="text-sm font-medium mb-2">Assigned Cashiers</p>
+                                            <p className="text-sm font-medium mb-2">Assigned Users</p>
                                             <div className="flex flex-wrap gap-2">
                                                 {shift.assignedCashierIds.map(id => {
                                                     const cashier = users.find(c => c.id === id);
@@ -625,17 +625,17 @@ export default function SettingsPage() {
                                     <Input id="edit-shift-end" type="time" value={editingShift.endTime} onChange={(e) => setEditingShift({...editingShift, endTime: e.target.value})} className="col-span-3" />
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="edit-shift-cashiers" className="text-right">Cashiers</Label>
+                                    <Label htmlFor="edit-shift-cashiers" className="text-right">Assigned Users</Label>
                                     <Combobox
                                         className="col-span-3"
-                                        options={users.filter(c => c.role === 'cashier').map(c => ({ value: c.id.toString(), label: c.name }))}
+                                        options={users.map(c => ({ value: c.id.toString(), label: c.name }))}
                                         selected={editingShift.assignedCashierIds.map(id => id.toString())}
                                         onSelectedChange={(selected) => {
                                             setEditingShift({ ...editingShift, assignedCashierIds: selected.map(s => parseInt(s)) });
                                         }}
-                                        placeholder="Select cashiers..."
-                                        searchPlaceholder="Search cashiers..."
-                                        notFoundPlaceholder="No cashiers found."
+                                        placeholder="Select users..."
+                                        searchPlaceholder="Search users..."
+                                        notFoundPlaceholder="No users found."
                                     />
                                 </div>
                             </div>
@@ -712,5 +712,7 @@ export default function SettingsPage() {
         </div>
     )
 }
+
+    
 
     

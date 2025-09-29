@@ -15,7 +15,8 @@ const data = [
   { date: "Jan 10", revenue: 530 },
 ];
 
-export function RevenueChart() {
+export function RevenueChart({ filters }: { filters: any }) {
+    // In a real app, you would use the `filters` prop to fetch and display dynamic data.
     return (
         <Card>
             <CardHeader>

@@ -18,7 +18,8 @@ const trafficData = [
 ];
 
 
-export function TrafficChart() {
+export function TrafficChart({ filters }: { filters: any }) {
+    // In a real app, you would use the `filters` prop to fetch and display dynamic data.
     return (
         <Card>
             <CardHeader>

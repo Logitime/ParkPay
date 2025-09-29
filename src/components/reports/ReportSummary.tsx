@@ -7,7 +7,8 @@ const summaryData = [
     { title: "Avg. Park Duration", value: "1h 24m", icon: Clock, change: "-2.3% from last month" },
 ]
 
-export function ReportSummary() {
+export function ReportSummary({ filters }: { filters: any }) {
+    // In a real app, you would use the `filters` prop to fetch and display dynamic data.
     return (
         <div className="grid gap-4 md:grid-cols-3">
             {summaryData.map(item => (

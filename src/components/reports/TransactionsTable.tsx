@@ -199,11 +199,11 @@ const DetailRow = ({
   </div>
 );
 
-const handlePrint = () => {
-    window.print();
-};
-
 function TransactionRow({ transaction }: { transaction: Transaction }) {
+  const handlePrint = () => {
+    window.print();
+  };
+  
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -283,7 +283,8 @@ function TransactionRow({ transaction }: { transaction: Transaction }) {
 }
 
 
-export function TransactionsTable() {
+export function TransactionsTable({ filters }: { filters: any }) {
+    // In a real app, you would use the `filters` prop to fetch and display dynamic data.
   return (
     <Card>
       <CardHeader>

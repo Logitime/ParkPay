@@ -1,3 +1,8 @@
+'use client';
+
+import { useState } from "react";
+import { DateRange } from "react-day-picker";
+import { addDays } from "date-fns";
 import { Header } from "@/components/layout/Header";
 import { Filters } from "@/components/reports/Filters";
 import { ReportSummary } from "@/components/reports/ReportSummary";
@@ -6,6 +11,21 @@ import { TrafficChart } from "@/components/reports/TrafficChart";
 import { TransactionsTable } from "@/components/reports/TransactionsTable";
 
 export default function ReportsPage() {
+    const [date, setDate] = useState<DateRange | undefined>({
+        from: new Date(2024, 0, 20),
+        to: addDays(new Date(2024, 0, 20), 20),
+    });
+    const [selectedCashier, setSelectedCashier] = useState('all');
+    const [selectedShift, setSelectedShift] = useState('all');
+    const [selectedGate, setSelectedGate] = useState('all');
+
+    const filters = {
+        date,
+        cashier: selectedCashier,
+        shift: selectedShift,
+        gate: selectedGate,
+    };
+
     return (
         <div className="flex flex-col h-full">
             <Header title="Reports" />
@@ -15,14 +35,23 @@ export default function ReportsPage() {
                         <h2 className="text-2xl font-bold font-headline">Financial & Traffic Reports</h2>
                         <p className="text-muted-foreground">Analyze revenue and transaction trends.</p>
                     </div>
-                    <Filters />
+                    <Filters 
+                        date={date}
+                        onDateChange={setDate}
+                        selectedCashier={selectedCashier}
+                        onCashierChange={setSelectedCashier}
+                        selectedShift={selectedShift}
+                        onShiftChange={setSelectedShift}
+                        selectedGate={selectedGate}
+                        onGateChange={setSelectedGate}
+                    />
                 </div>
-                <ReportSummary />
+                <ReportSummary filters={filters} />
                 <div className="grid gap-8 md:grid-cols-2">
-                    <RevenueChart />
-                    <TrafficChart />
+                    <RevenueChart filters={filters} />
+                    <TrafficChart filters={filters} />
                 </div>
-                <TransactionsTable />
+                <TransactionsTable filters={filters} />
             </main>
         </div>
     )

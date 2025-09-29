@@ -11,6 +11,7 @@ import {
   Users,
   TicketPercent,
   Shield,
+  Presentation,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import {
@@ -27,6 +28,7 @@ export function SidebarLinks() {
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/cashier', label: 'Cashier', icon: HandCoins },
     { href: '/operator', label: 'Operator', icon: Shield },
+    { href: '/kiosk', label: 'Kiosk', icon: Presentation },
     { href: '/gates', label: 'Gates', icon: Car },
     { href: '/zones', label: 'Zones', icon: ParkingSquare },
     { href: '/parkers', label: 'Parkers', icon: Users },

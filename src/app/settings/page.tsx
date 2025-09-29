@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Car, DollarSign, ParkingSquare, Settings, User, KeyRound, QrCode, Printer, Clock, Trash2 } from "lucide-react";
+import { Car, DollarSign, ParkingSquare, Settings, User, KeyRound, QrCode, Printer, Clock, Trash2, Mail } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { mockCashiers } from "@/lib/mock-data";
@@ -66,6 +66,10 @@ export default function SettingsPage() {
     // General Settings State
     const [darkMode, setDarkMode] = useState(false);
     const [emailNotifications, setEmailNotifications] = useState(true);
+    const [smtpHost, setSmtpHost] = useState("smtp.gmail.com");
+    const [smtpPort, setSmtpPort] = useState("587");
+    const [smtpUser, setSmtpUser] = useState("");
+    const [smtpPass, setSmtpPass] = useState("");
 
     // Gate Settings State
     const [gates, setGates] = useState<Gate[]>([
@@ -305,6 +309,37 @@ export default function SettingsPage() {
                                     </div>
                                     <Switch id="notifications" checked={emailNotifications} onCheckedChange={setEmailNotifications} />
                                 </div>
+                                <Card>
+                                    <CardHeader>
+                                        <div className="flex items-center gap-2">
+                                            <Mail className="size-5" />
+                                            <CardTitle className="text-lg">Email (SMTP) Settings</CardTitle>
+                                        </div>
+                                        <CardDescription>
+                                            Configure your Gmail SMTP server for sending notifications. For this to work, you may need to create an "App Password" in your Google Account settings.
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="grid sm:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="smtp-host">SMTP Host</Label>
+                                                <Input id="smtp-host" value={smtpHost} onChange={(e) => setSmtpHost(e.target.value)} />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="smtp-port">SMTP Port</Label>
+                                                <Input id="smtp-port" value={smtpPort} onChange={(e) => setSmtpPort(e.target.value)} />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="smtp-user">Gmail Address</Label>
+                                            <Input id="smtp-user" type="email" placeholder="you@gmail.com" value={smtpUser} onChange={(e) => setSmtpUser(e.target.value)} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="smtp-pass">App Password</Label>
+                                            <Input id="smtp-pass" type="password" placeholder="••••••••••••••••" value={smtpPass} onChange={(e) => setSmtpPass(e.target.value)} />
+                                        </div>
+                                    </CardContent>
+                                </Card>
                             </CardContent>
                             <CardContent>
                                 <Button onClick={() => handleSaveChanges('General')}>Save General Settings</Button>
@@ -726,4 +761,5 @@ export default function SettingsPage() {
     
 
     
+
 

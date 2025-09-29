@@ -101,6 +101,7 @@ export default function SettingsPage() {
     const [cashiers, setCashiers] = useState<Cashier[]>(mockCashiers.map(c => ({...c})));
     const [newCashierName, setNewCashierName] = useState("");
     const [newCashierEmail, setNewCashierEmail] = useState("");
+    const [newCashierRole, setNewCashierRole] = useState<Cashier['role']>('cashier');
     const [newCashierGateId, setNewCashierGateId] = useState<string | null>(null);
 
     // Shift Settings State
@@ -157,9 +158,10 @@ export default function SettingsPage() {
     
     const handleAddNewCashier = () => {
         if (newCashierName && newCashierEmail) {
-            setCashiers([...cashiers, { id: Date.now(), name: newCashierName, email: newCashierEmail, role: 'cashier', assignedGateId: newCashierGateId ? parseInt(newCashierGateId) : null }]);
+            setCashiers([...cashiers, { id: Date.now(), name: newCashierName, email: newCashierEmail, role: newCashierRole, assignedGateId: newCashierGateId ? parseInt(newCashierGateId) : null }]);
             setNewCashierName("");
             setNewCashierEmail("");
+            setNewCashierRole('cashier');
             setNewCashierGateId(null);
             toast({
                 title: "New User Added",
@@ -239,7 +241,7 @@ export default function SettingsPage() {
                         <TabsTrigger value="gates"><Car className="mr-2" /> Gates</TabsTrigger>
                         <TabsTrigger value="zones"><ParkingSquare className="mr-2" /> Zones</TabsTrigger>
                         <TabsTrigger value="tariffs"><DollarSign className="mr-2" /> Tariffs</TabsTrigger>
-                        <TabsTrigger value="cashiers"><User className="mr-2" /> Users</TabsTrigger>
+                        <TabsTrigger value="users"><User className="mr-2" /> Users</TabsTrigger>
                         <TabsTrigger value="shifts"><Clock className="mr-2" /> Shifts</TabsTrigger>
                     </TabsList>
                     <TabsContent value="general">
@@ -466,7 +468,7 @@ export default function SettingsPage() {
                             </CardContent>
                         </Card>
                     </TabsContent>
-                    <TabsContent value="cashiers">
+                    <TabsContent value="users">
                         <Card>
                             <CardHeader>
                                 <CardTitle>User Management</CardTitle>
@@ -474,7 +476,12 @@ export default function SettingsPage() {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                {cashiers.map(cashier => {
-                                   const assignedGate = gates.find(g => g.id === cashier.assignedGateId);
+                                   const gateOptions = cashier.role === 'cashier'
+                                        ? gates.filter(g => g.name.toLowerCase().includes('exit'))
+                                        : cashier.role === 'operator'
+                                        ? gates.filter(g => g.name.toLowerCase().includes('entry'))
+                                        : [];
+
                                    return (
                                        <div key={cashier.id} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                             <div className="grid gap-4 flex-1">
@@ -502,14 +509,14 @@ export default function SettingsPage() {
                                                  <Select 
                                                     value={cashier.assignedGateId?.toString() ?? 'none'} 
                                                     onValueChange={(value) => handleCashierChange(cashier.id, 'assignedGateId', value === 'none' ? null : parseInt(value))}
-                                                    disabled={cashier.role !== 'cashier'}
+                                                    disabled={cashier.role !== 'cashier' && cashier.role !== 'operator'}
                                                 >
                                                     <SelectTrigger className="w-[180px]">
                                                         <SelectValue placeholder="Assign a gate" />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         <SelectItem value="none">None</SelectItem>
-                                                        {gates.filter(g => g.name.toLowerCase().includes('exit')).map(gate => (
+                                                        {gateOptions.map(gate => (
                                                             <SelectItem key={gate.id} value={gate.id.toString()}>{gate.name}</SelectItem>
                                                         ))}
                                                     </SelectContent>
@@ -539,13 +546,27 @@ export default function SettingsPage() {
                                                 <Input id="cashier-email" type="email" value={newCashierEmail} onChange={(e) => setNewCashierEmail(e.target.value)} className="col-span-3" />
                                             </div>
                                             <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="cashier-gate" className="text-right">Assign Gate</Label>
-                                                 <Select value={newCashierGateId ?? undefined} onValueChange={setNewCashierGateId}>
+                                                <Label htmlFor="cashier-role" className="text-right">Role</Label>
+                                                 <Select value={newCashierRole} onValueChange={(value: Cashier['role']) => setNewCashierRole(value)}>
                                                     <SelectTrigger className="col-span-3">
-                                                        <SelectValue placeholder="Select an exit gate" />
+                                                        <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        {gates.filter(g => g.name.toLowerCase().includes('exit')).map(gate => (
+                                                        <SelectItem value="admin">Admin</SelectItem>
+                                                        <SelectItem value="cashier">Cashier</SelectItem>
+                                                        <SelectItem value="operator">Operator</SelectItem>
+                                                        <SelectItem value="viewer">Viewer</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="cashier-gate" className="text-right">Assign Gate</Label>
+                                                 <Select value={newCashierGateId ?? undefined} onValueChange={setNewCashierGateId} disabled={newCashierRole !== 'cashier' && newCashierRole !== 'operator'}>
+                                                    <SelectTrigger className="col-span-3">
+                                                        <SelectValue placeholder="Select a gate" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {(newCashierRole === 'cashier' ? gates.filter(g => g.name.toLowerCase().includes('exit')) : gates.filter(g => g.name.toLowerCase().includes('entry'))).map(gate => (
                                                             <SelectItem key={gate.id} value={gate.id.toString()}>{gate.name}</SelectItem>
                                                         ))}
                                                     </SelectContent>

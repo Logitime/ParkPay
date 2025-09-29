@@ -29,7 +29,7 @@ type Cashier = {
     id: number;
     name: string;
     email: string;
-    role: 'admin' | 'cashier' | 'viewer';
+    role: 'admin' | 'cashier' | 'viewer' | 'operator';
     assignedGateId: number | null;
 }
 
@@ -491,6 +491,7 @@ export default function SettingsPage() {
                                                         <SelectContent>
                                                             <SelectItem value="admin">Admin</SelectItem>
                                                             <SelectItem value="cashier">Cashier</SelectItem>
+                                                            <SelectItem value="operator">Operator</SelectItem>
                                                             <SelectItem value="viewer">Viewer</SelectItem>
                                                         </SelectContent>
                                                     </Select>

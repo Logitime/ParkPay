@@ -1,3 +1,4 @@
+
 export const mockGates = [
     { id: 1, name: "Entry Gate", ip: "10.0.0.185", port: "5000", output: "1" },
     { id: 2, name: "Exit Gate", ip: "192.168.1.11", port: "5000", output: "2" },
@@ -9,6 +10,7 @@ export const mockCashiers = [
     { id: 2, name: "Jane Smith", assignedGateId: 3, role: 'cashier' as const, email: 'jane.smith@example.com' },
     { id: 3, name: "Admin User", assignedGateId: null, role: 'admin' as const, email: 'admin@parkpay.co' },
     { id: 4, name: "Viewer User", assignedGateId: null, role: 'viewer' as const, email: 'viewer@example.com' },
+    { id: 5, name: "Operator User", assignedGateId: null, role: 'operator' as const, email: 'operator@example.com' },
 ];
 
 export const initialMockTickets = [

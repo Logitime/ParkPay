@@ -9,7 +9,7 @@ import {
   Car,
   HandCoins,
   Users,
-  Clock,
+  TicketPercent,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import {
@@ -29,6 +29,7 @@ export function SidebarLinks() {
     { href: '/zones', label: 'Zones', icon: ParkingSquare },
     { href: '/parkers', label: 'Parkers', icon: Users },
     { href: '/reports', label: 'Reports', icon: BarChart3 },
+    { href: '/returns', label: 'Returns', icon: TicketPercent },
     { href: '/settings', label: 'Settings', icon: Settings },
   ];
 

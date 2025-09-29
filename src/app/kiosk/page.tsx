@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Ticket, Car, ParkingCircle, HandCoins, User, Calendar, Smile, Loader2, Gate, Clock, UserCircle } from 'lucide-react';
+import { Ticket, Car, ParkingCircle, HandCoins, User, Calendar, Smile, Loader2, DoorOpen, Clock, UserCircle } from 'lucide-react';
 import Image from 'next/image';
 import QRCode from 'qrcode';
 import { cn } from '@/lib/utils';
@@ -129,7 +129,7 @@ export default function KioskPage() {
                              <p className="font-mono text-center text-lg mb-4">{generatedTicket.id}</p>
                             <Separator/>
                             <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
-                                <div className="flex items-center gap-2"><Gate className="size-4 text-muted-foreground" /> <span>{generatedTicket.gateName}</span></div>
+                                <div className="flex items-center gap-2"><DoorOpen className="size-4 text-muted-foreground" /> <span>{generatedTicket.gateName}</span></div>
                                 <div className="flex items-center gap-2"><UserCircle className="size-4 text-muted-foreground" /> <span>{generatedTicket.operatorName}</span></div>
                                 <div className="flex items-center gap-2 col-span-2"><Clock className="size-4 text-muted-foreground" /> <span>{generatedTicket.entryTime.toLocaleString()}</span></div>
                             </div>

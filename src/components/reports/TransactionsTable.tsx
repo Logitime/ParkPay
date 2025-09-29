@@ -181,32 +181,109 @@ const transactions = [
 
 type Transaction = (typeof transactions)[0];
 
-export function TransactionsTable() {
-  const [selectedTransaction, setSelectedTransaction] =
-    React.useState<Transaction | null>(null);
-
-  const DetailRow = ({
-    icon: Icon,
-    label,
-    value,
-  }: {
-    icon: React.ElementType;
-    label: string;
-    value: string | React.ReactNode;
-  }) => (
-    <div className="flex items-start justify-between py-2 border-b">
-      <div className="flex items-center gap-3">
-        <Icon className="size-5 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">{label}</span>
-      </div>
-      <span className="text-sm font-medium text-right">{value}</span>
+const DetailRow = ({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string | React.ReactNode;
+}) => (
+  <div className="flex items-start justify-between py-2 border-b">
+    <div className="flex items-center gap-3">
+      <Icon className="size-5 text-muted-foreground" />
+      <span className="text-sm text-muted-foreground">{label}</span>
     </div>
-  );
+    <span className="text-sm font-medium text-right">{value}</span>
+  </div>
+);
 
-  const handlePrint = () => {
+const handlePrint = () => {
     window.print();
-  };
+};
 
+function TransactionRow({ transaction }: { transaction: Transaction }) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <TableRow className="cursor-pointer">
+          <TableCell className="font-medium">{transaction.ticketId}</TableCell>
+          <TableCell>{transaction.plate}</TableCell>
+          <TableCell>{transaction.entry.time}</TableCell>
+          <TableCell>{transaction.exit.time}</TableCell>
+          <TableCell>{transaction.duration}</TableCell>
+          <TableCell>
+            <Badge
+              variant={transaction.status === 'Paid' ? 'default' : 'secondary'}
+              className={
+                transaction.status === 'Paid'
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-yellow-100 text-yellow-800'
+              }
+            >
+              {transaction.status}
+            </Badge>
+          </TableCell>
+          <TableCell className="text-right">{transaction.amount}</TableCell>
+        </TableRow>
+      </DialogTrigger>
+      <DialogContent className="printable-area">
+        <DialogHeader>
+          <DialogTitle>Transaction: {transaction.ticketId}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2 py-4">
+          <DetailRow
+            icon={Car}
+            label="License Plate"
+            value={transaction.plate}
+          />
+          <DetailRow
+            icon={DoorOpen}
+            label="Entry"
+            value={`${transaction.entry.date} at ${transaction.entry.time} via ${transaction.entry.gate}`}
+          />
+           <DetailRow
+            icon={DoorOpen}
+            label="Exit"
+            value={`${transaction.exit.date} at ${transaction.exit.time} via ${transaction.exit.gate}`}
+          />
+          <DetailRow
+            icon={User}
+            label="Cashier"
+            value={transaction.exit.user}
+          />
+          <DetailRow
+            icon={Clock}
+            label="Total Parking Time"
+            value={transaction.duration}
+          />
+           <DetailRow
+            icon={DollarSign}
+            label="Final Amount Paid"
+            value={
+              <span className="font-bold text-lg text-primary">
+                  {transaction.amount}
+              </span>
+            }
+          />
+        </div>
+        <DialogFooter className="no-print">
+          <Button variant="outline" onClick={handlePrint}>
+            <Printer className="mr-2" />
+            Print
+          </Button>
+          <DialogClose asChild>
+            <Button>Close</Button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
+export function TransactionsTable() {
   return (
     <Card>
       <CardHeader>
@@ -217,105 +294,26 @@ export function TransactionsTable() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Dialog>
-          <ScrollArea className="h-[400px]">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Ticket ID</TableHead>
-                  <TableHead>Plate</TableHead>
-                  <TableHead>Entry</TableHead>
-                  <TableHead>Exit</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {transactions.map((tx) => (
-                  <DialogTrigger asChild key={tx.ticketId}>
-                    <TableRow
-                      onClick={() => setSelectedTransaction(tx)}
-                      className="cursor-pointer"
-                    >
-                      <TableCell className="font-medium">{tx.ticketId}</TableCell>
-                      <TableCell>{tx.plate}</TableCell>
-                      <TableCell>{tx.entry.time}</TableCell>
-                      <TableCell>{tx.exit.time}</TableCell>
-                      <TableCell>{tx.duration}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={tx.status === 'Paid' ? 'default' : 'secondary'}
-                          className={
-                            tx.status === 'Paid'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }
-                        >
-                          {tx.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">{tx.amount}</TableCell>
-                    </TableRow>
-                  </DialogTrigger>
-                ))}
-              </TableBody>
-            </Table>
-          </ScrollArea>
-
-          {selectedTransaction && (
-            <DialogContent className="printable-area">
-              <DialogHeader>
-                <DialogTitle>Transaction: {selectedTransaction.ticketId}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-2 py-4">
-                <DetailRow
-                  icon={Car}
-                  label="License Plate"
-                  value={selectedTransaction.plate}
-                />
-                <DetailRow
-                  icon={DoorOpen}
-                  label="Entry"
-                  value={`${selectedTransaction.entry.date} at ${selectedTransaction.entry.time} via ${selectedTransaction.entry.gate}`}
-                />
-                 <DetailRow
-                  icon={DoorOpen}
-                  label="Exit"
-                  value={`${selectedTransaction.exit.date} at ${selectedTransaction.exit.time} via ${selectedTransaction.exit.gate}`}
-                />
-                <DetailRow
-                  icon={User}
-                  label="Cashier"
-                  value={selectedTransaction.exit.user}
-                />
-                <DetailRow
-                  icon={Clock}
-                  label="Total Parking Time"
-                  value={selectedTransaction.duration}
-                />
-                 <DetailRow
-                  icon={DollarSign}
-                  label="Final Amount Paid"
-                  value={
-                    <span className="font-bold text-lg text-primary">
-                        {selectedTransaction.amount}
-                    </span>
-                  }
-                />
-              </div>
-              <DialogFooter className="no-print">
-                <Button variant="outline" onClick={handlePrint}>
-                  <Printer className="mr-2" />
-                  Print
-                </Button>
-                <DialogClose asChild>
-                  <Button>Close</Button>
-                </DialogClose>
-              </DialogFooter>
-            </DialogContent>
-          )}
-        </Dialog>
+        <ScrollArea className="h-[400px]">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Ticket ID</TableHead>
+                <TableHead>Plate</TableHead>
+                <TableHead>Entry</TableHead>
+                <TableHead>Exit</TableHead>
+                <TableHead>Duration</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {transactions.map((tx) => (
+                <TransactionRow key={tx.ticketId} transaction={tx} />
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollArea>
       </CardContent>
     </Card>
   );

@@ -186,7 +186,7 @@ export default function CashierPage() {
     const handleAutomatedNotification = async (parker: any) => {
         // Simulate checking if a parker's balance has reached a threshold
         // In a real app, you would fetch their actual balance.
-        // Here, we'll trigger it for any 'monthly' parker upon exit.
+        // Here, we'll trigger it for any 'monthly' or 'yearly' parker upon exit.
         if (parker.participation === 'monthly' || parker.participation === 'yearly') {
             
             const totalDue = parker.participation === 'monthly' ? 150 : 1800;

@@ -1,3 +1,4 @@
+
 // @ts-nocheck
 'use server';
 import { predictOccupancy, PredictOccupancyInput, PredictOccupancyOutput } from "@/ai/flows/occupancy-prediction";
@@ -48,7 +49,7 @@ export async function sendParkerNotification(input: GenerateParkerEmailInput): P
     
     // In a real-world application, you would add your email sending logic here.
     // For example, using a service like Nodemailer or an API like SendGrid.
-    // console.log(`Sending email to ${input.email}:`, emailContent);
+    console.log(`Simulating sending email to ${input.name}:`, emailContent);
 
     return { data: emailContent, error: null };
   } catch (e) {
@@ -91,7 +92,7 @@ function sendCommandToRelay(host: string, port: number, command: string): Promis
             connectionClosed = true;
             client.destroy();
             clearTimeout(timer);
-            reject(err);
+            resolve('timeout');
         });
         
         client.on('close', () => {
@@ -99,7 +100,7 @@ function sendCommandToRelay(host: string, port: number, command: string): Promis
              connectionClosed = true;
              clearTimeout(timer);
              if (!hasConnected) {
-                reject(new Error(`Connection to ${host}:${port} failed`));
+                resolve('timeout');
              }
         });
 
@@ -144,7 +145,6 @@ export async function controlGate(input: z.infer<typeof GateActionSchema>): Prom
             return { success: true, message: `Gate ${action} command sent successfully.` };
         } else {
             const message = `Unexpected response from relay: got '${response}', expected '${expectedResponse}'`;
-            console.error(`[Relay] ${message}`);
             return { success: false, message };
         }
     } catch (e) {
@@ -180,3 +180,5 @@ export async function readGateSensor(input: z.infer<typeof ReadInputActionSchema
         return { success: false, message: `Failed to read gate sensor: ${errorMessage}` };
     }
 }
+
+    

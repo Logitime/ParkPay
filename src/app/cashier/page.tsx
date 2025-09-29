@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Clock, DollarSign, QrCode, Ticket, Car, CheckCircle, MonitorSpeaker } from "lucide-react";
-import { controlGate } from "@/app/actions";
+import { controlGate, sendParkerNotification } from "@/app/actions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
@@ -134,6 +134,8 @@ export default function CashierPage() {
                 status: "In-Park",
                 type: foundParker.type,
                 name: foundParker.name,
+                email: foundParker.email,
+                participation: foundParker.participation,
             };
             setActiveTicket(parkerTicket);
             toast({
@@ -181,6 +183,31 @@ export default function CashierPage() {
         });
     }
 
+    const handleAutomatedNotification = async (parker: any) => {
+        // Simulate checking if a parker's balance has reached a threshold
+        // In a real app, you would fetch their actual balance.
+        // Here, we'll trigger it for any 'monthly' parker upon exit.
+        if (parker.participation === 'monthly' || parker.participation === 'yearly') {
+            
+            const totalDue = parker.participation === 'monthly' ? 150 : 1800;
+            const currentBalance = totalDue * 0.85; // Simulate being over 80%
+
+            if (currentBalance / totalDue >= 0.8) {
+                toast({
+                    title: "Automated Notification Sent",
+                    description: `Sending a balance reminder to ${parker.name}.`,
+                });
+
+                await sendParkerNotification({
+                    name: parker.name,
+                    participation: parker.participation,
+                    balance: currentBalance,
+                    dueDate: new Date(new Date().setDate(new Date().getDate() + 15)).toISOString().split('T')[0],
+                });
+            }
+        }
+    };
+
     const handleOpenGate = async () => {
         if (!activeCashier) {
              toast({ variant: "destructive", title: "No Cashier Selected", description: "Please select a cashier station." });
@@ -208,6 +235,12 @@ export default function CashierPage() {
                 title: `Opening ${assignedGate.name}`,
                 description: "Exit gate opening command sent.",
             });
+
+            // Check if we need to send an automated notification for registered parkers
+            if (activeTicket && activeTicket.type !== 'visitor') {
+                 handleAutomatedNotification(activeTicket);
+            }
+
             // Reset after successful exit
             setTimeout(() => {
                 // Remove the ticket from the active list

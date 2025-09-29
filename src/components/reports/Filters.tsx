@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DateRangePicker } from "./DateRangePicker";
@@ -37,7 +38,7 @@ export function Filters({
     <div className="flex flex-wrap items-center gap-4">
       <DateRangePicker date={date} onDateChange={onDateChange} />
        <Select value={selectedCashier} onValueChange={onCashierChange}>
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-full sm:w-[180px]">
           <div className="flex items-center gap-2">
             <User className="size-4" />
             <SelectValue placeholder="All Cashiers" />
@@ -53,7 +54,7 @@ export function Filters({
         </SelectContent>
       </Select>
        <Select value={selectedShift} onValueChange={onShiftChange}>
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-full sm:w-[180px]">
             <div className="flex items-center gap-2">
                 <Clock className="size-4" />
                 <SelectValue placeholder="All Day" />
@@ -66,7 +67,7 @@ export function Filters({
         </SelectContent>
       </Select>
       <Select value={selectedGate} onValueChange={onGateChange}>
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-full sm:w-[180px]">
             <div className="flex items-center gap-2">
                 <DoorOpen className="size-4" />
                 <SelectValue placeholder="All Gates" />

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from "react";
@@ -9,8 +10,12 @@ import { ReportSummary } from "@/components/reports/ReportSummary";
 import { RevenueChart } from "@/components/reports/RevenueChart";
 import { TrafficChart } from "@/components/reports/TrafficChart";
 import { TransactionsTable } from "@/components/reports/TransactionsTable";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ReportsPage() {
+    const { toast } = useToast();
     const [date, setDate] = useState<DateRange | undefined>({
         from: new Date(2024, 0, 20),
         to: addDays(new Date(2024, 0, 20), 20),
@@ -26,6 +31,13 @@ export default function ReportsPage() {
         gate: selectedGate,
     };
 
+    const handleExport = () => {
+        toast({
+            title: "Exporting Report",
+            description: "In a real application, this would download a CSV file of the report data.",
+        });
+    }
+
     return (
         <div className="flex flex-col h-full">
             <Header title="Reports" />
@@ -35,16 +47,22 @@ export default function ReportsPage() {
                         <h2 className="text-2xl font-bold font-headline">Financial & Traffic Reports</h2>
                         <p className="text-muted-foreground">Analyze revenue and transaction trends.</p>
                     </div>
-                    <Filters 
-                        date={date}
-                        onDateChange={setDate}
-                        selectedCashier={selectedCashier}
-                        onCashierChange={setSelectedCashier}
-                        selectedShift={selectedShift}
-                        onShiftChange={setSelectedShift}
-                        selectedGate={selectedGate}
-                        onGateChange={setSelectedGate}
-                    />
+                     <div className="flex flex-wrap items-center gap-4">
+                        <Filters 
+                            date={date}
+                            onDateChange={setDate}
+                            selectedCashier={selectedCashier}
+                            onCashierChange={setSelectedCashier}
+                            selectedShift={selectedShift}
+                            onShiftChange={setSelectedShift}
+                            selectedGate={selectedGate}
+                            onGateChange={setSelectedGate}
+                        />
+                        <Button onClick={handleExport}>
+                            <Download className="mr-2" />
+                            Export Report
+                        </Button>
+                    </div>
                 </div>
                 <ReportSummary filters={filters} />
                 <div className="grid gap-8 md:grid-cols-2">

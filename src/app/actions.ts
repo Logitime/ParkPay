@@ -42,13 +42,17 @@ const ReadInputActionSchema = z.object({
 function sendCommandToRelay(host: string, port: number, command: string): Promise<string> {
     return new Promise((resolve, reject) => {
         const client = new net.Socket();
-        const timeout = 5000;
+        const timeout = 2000; // Reduced timeout for quicker feedback
         let hasConnected = false;
         let connectionClosed = false;
 
         const timer = setTimeout(() => {
+            if (connectionClosed) return;
+            connectionClosed = true;
             client.destroy();
-            reject(new Error(`Relay command timed out for command "${command}"`));
+            // Instead of rejecting, we resolve with a specific timeout indicator
+            // This prevents console errors for expected timeouts in a mock environment.
+            resolve('timeout');
         }, timeout);
 
         client.on('error', (err) => {
@@ -66,6 +70,7 @@ function sendCommandToRelay(host: string, port: number, command: string): Promis
              console.log(`[Relay] Connection closed to ${host}:${port}`);
              clearTimeout(timer);
              if (!hasConnected) {
+                // This will still reject if the initial connection is refused, which is a valid error.
                 reject(new Error(`Connection to ${host}:${port} failed`));
              }
         });
@@ -85,6 +90,7 @@ function sendCommandToRelay(host: string, port: number, command: string): Promis
         });
 
         client.on('data', (data) => {
+            clearTimeout(timer); // Clear the timeout on successful data receipt
             const response = data.toString().trim();
             console.log(`[Relay] Received from relay: '${response}'`);
             client.end(); // Gracefully close the connection
@@ -108,6 +114,9 @@ export async function controlGate(input: z.infer<typeof GateActionSchema>): Prom
     
     try {
         const response = await sendCommandToRelay(host, port, command);
+        if (response === 'timeout') {
+            return { success: false, message: `Relay command timed out for command "${command}"` };
+        }
         if (response === expectedResponse) {
             return { success: true, message: `Gate ${action} command sent successfully.` };
         } else {
@@ -134,6 +143,9 @@ export async function readGateSensor(input: z.infer<typeof ReadInputActionSchema
     
     try {
         const response = await sendCommandToRelay(host, port, command);
+        if (response === 'timeout') {
+            return { success: false, message: `Relay command timed out for command "${command}"` };
+        }
         // Expecting "input" + 8 binary digits, e.g. "input00000001"
         if (response.startsWith('input') && response.length === 13) { 
             const binaryData = response.substring(5); 
@@ -147,3 +159,4 @@ export async function readGateSensor(input: z.infer<typeof ReadInputActionSchema
         return { success: false, message: `Failed to read gate sensor: ${errorMessage}` };
     }
 }
+

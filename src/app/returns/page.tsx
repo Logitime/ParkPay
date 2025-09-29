@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Ticket, Search, Percent, DollarSign, RotateCcw } from 'lucide-react';
+import { Ticket, Search, Percent, DollarSign, RotateCcw, MessageSquare } from 'lucide-react';
 import { initialMockTransactions } from '@/lib/mock-data';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
@@ -31,10 +31,27 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 
 type Transaction = typeof initialMockTransactions[0];
 type DiscountType = 'none' | 'percentage' | 'fixed';
+
+const adjustmentReasons = [
+    "Customer Complaint",
+    "Promotional Offer",
+    "Service Issue",
+    "Employee Discount",
+    "Goodwill Gesture",
+    "Other",
+];
+
 
 export default function ReturnsPage() {
   const { toast } = useToast();
@@ -43,6 +60,7 @@ export default function ReturnsPage() {
   const [discountType, setDiscountType] = useState<DiscountType>('none');
   const [discountValue, setDiscountValue] = useState('');
   const [finalAmount, setFinalAmount] = useState<number | null>(null);
+  const [reason, setReason] = useState('');
 
   const handleFindTransaction = () => {
     // In a real app, you would fetch this from your database
@@ -53,6 +71,7 @@ export default function ReturnsPage() {
       setFinalAmount(transaction.amount);
       setDiscountType('none');
       setDiscountValue('');
+      setReason('');
       toast({
         title: "Transaction Found",
         description: `Details for ticket ${transaction.ticketId} loaded.`,
@@ -91,36 +110,49 @@ export default function ReturnsPage() {
           return;
       }
       newFinalAmount = foundTransaction.amount - value;
+    } else {
+        newFinalAmount = foundTransaction.amount;
     }
 
     setFinalAmount(newFinalAmount);
   };
   
   const handleProcessRefund = () => {
+     if (!reason) {
+        toast({ variant: 'destructive', title: 'Reason Required', description: 'Please select a reason for the refund.'});
+        return;
+    }
     // In a real app, this would update the transaction status in the DB
     // and potentially trigger a refund through a payment provider API.
     toast({
       title: "Refund Processed",
-      description: `A full refund of $${foundTransaction?.amount.toFixed(2)} has been issued for ticket ${foundTransaction?.ticketId}.`,
+      description: `Full refund of $${foundTransaction?.amount.toFixed(2)} issued for ticket ${foundTransaction?.ticketId}. Reason: ${reason}`,
       className: "bg-blue-100 text-blue-800"
     });
     // Reset state
     setFoundTransaction(null);
     setTicketId('');
+    setReason('');
   }
 
    const handleProcessDiscount = () => {
     if (finalAmount === null || !foundTransaction) return;
+    if (!reason) {
+        toast({ variant: 'destructive', title: 'Reason Required', description: 'Please select a reason for the discount.'});
+        return;
+    }
+
     const refundedAmount = foundTransaction.amount - finalAmount;
     
     toast({
       title: "Discount Processed",
-      description: `A partial refund of $${refundedAmount.toFixed(2)} has been issued. New total: $${finalAmount.toFixed(2)}.`,
+      description: `Partial refund of $${refundedAmount.toFixed(2)} issued for reason: ${reason}. New total: $${finalAmount.toFixed(2)}.`,
        className: "bg-green-100 text-green-800"
     });
     // Reset state
     setFoundTransaction(null);
     setTicketId('');
+    setReason('');
   }
 
 
@@ -211,6 +243,21 @@ export default function ReturnsPage() {
                             <Button variant="outline" onClick={applyDiscount}>Apply</Button>
                         </div>
                      )}
+                    
+                    <div className="space-y-2">
+                        <Label htmlFor="reason">Reason for Adjustment</Label>
+                        <Select value={reason} onValueChange={setReason}>
+                            <SelectTrigger id="reason">
+                                <SelectValue placeholder="Select a reason..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {adjustmentReasons.map(r => (
+                                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
 
                     <Separator />
 
@@ -258,7 +305,7 @@ export default function ReturnsPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-            <Button onClick={handleProcessDiscount} disabled={!foundTransaction || finalAmount === foundTransaction.amount}>
+            <Button onClick={handleProcessDiscount} disabled={!foundTransaction || finalAmount === foundTransaction.amount || discountType === 'none'}>
                 Process Discount
             </Button>
           </CardFooter>

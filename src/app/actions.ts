@@ -1,6 +1,7 @@
 // @ts-nocheck
 'use server';
 import { predictOccupancy, PredictOccupancyInput, PredictOccupancyOutput } from "@/ai/flows/occupancy-prediction";
+import { generateParkerEmail, GenerateParkerEmailOutput } from "@/ai/flows/generate-parker-email";
 import { z } from "zod";
 import net from 'net';
 
@@ -26,6 +27,38 @@ export async function getOccupancyPrediction(input: PredictOccupancyInput): Prom
   }
 }
 
+export const GenerateParkerEmailInputSchema = z.object({
+  name: z.string().describe('The name of the parker.'),
+  participation: z.string().describe('The type of their parking plan (e.g., monthly, yearly).'),
+  balance: z.number().describe('The outstanding balance on their account.'),
+  dueDate: z.string().describe('The due date for the payment (e.g., YYYY-MM-DD).'),
+});
+export type GenerateParkerEmailInput = z.infer<typeof GenerateParkerEmailInputSchema>;
+
+
+export async function sendParkerNotification(input: GenerateParkerEmailInput): Promise<{ data: GenerateParkerEmailOutput | null; error: string | null }> {
+  const validatedInput = GenerateParkerEmailInputSchema.safeParse(input);
+
+  if (!validatedInput.success) {
+    return { data: null, error: validatedInput.error.errors.map(e => e.message).join(', ') };
+  }
+
+  try {
+    const emailContent = await generateParkerEmail(validatedInput.data);
+    
+    // In a real-world application, you would add your email sending logic here.
+    // For example, using a service like Nodemailer or an API like SendGrid.
+    // console.log(`Sending email to ${input.email}:`, emailContent);
+
+    return { data: emailContent, error: null };
+  } catch (e) {
+    console.error(e);
+    const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
+    return { data: null, error: `Failed to generate notification: ${errorMessage}` };
+  }
+}
+
+
 const GateActionSchema = z.object({
   host: z.string(),
   port: z.number(),
@@ -50,15 +83,12 @@ function sendCommandToRelay(host: string, port: number, command: string): Promis
             if (connectionClosed) return;
             connectionClosed = true;
             client.destroy();
-            // Instead of rejecting, we resolve with a specific timeout indicator
-            // This prevents console errors for expected timeouts in a mock environment.
             resolve('timeout');
         }, timeout);
 
         client.on('error', (err) => {
             if (connectionClosed) return;
             connectionClosed = true;
-            console.error(`[Relay] Connection error to ${host}:${port}:`, err.message);
             client.destroy();
             clearTimeout(timer);
             reject(err);
@@ -67,32 +97,25 @@ function sendCommandToRelay(host: string, port: number, command: string): Promis
         client.on('close', () => {
              if (connectionClosed) return;
              connectionClosed = true;
-             console.log(`[Relay] Connection closed to ${host}:${port}`);
              clearTimeout(timer);
              if (!hasConnected) {
-                // This will still reject if the initial connection is refused, which is a valid error.
                 reject(new Error(`Connection to ${host}:${port} failed`));
              }
         });
 
         client.connect(port, host, () => {
             hasConnected = true;
-            console.log(`[Relay] Connected to ${host}:${port}`);
-            console.log(`[Relay] Sending command: '${command}'`);
             client.write(command, (err) => {
                 if (err) {
-                   console.error('[Relay] Error writing command:', err);
                    client.destroy();
                    return reject(err);
                 }
-                 console.log('[Relay] Command sent successfully.');
             });
         });
 
         client.on('data', (data) => {
             clearTimeout(timer); // Clear the timeout on successful data receipt
             const response = data.toString().trim();
-            console.log(`[Relay] Received from relay: '${response}'`);
             client.end(); // Gracefully close the connection
             resolve(response);
         });
@@ -126,7 +149,6 @@ export async function controlGate(input: z.infer<typeof GateActionSchema>): Prom
         }
     } catch (e) {
         const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
-        console.error(`[Relay] Failed to control gate: ${errorMessage}`);
         return { success: false, message: `Failed to control gate: ${errorMessage}` };
     }
 }
@@ -155,8 +177,6 @@ export async function readGateSensor(input: z.infer<typeof ReadInputActionSchema
 
     } catch (e) {
         const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
-        console.error(`[Relay] Failed to read gate sensor: ${errorMessage}`);
         return { success: false, message: `Failed to read gate sensor: ${errorMessage}` };
     }
 }
-

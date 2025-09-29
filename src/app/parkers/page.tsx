@@ -40,8 +40,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Users, PlusCircle, Edit } from 'lucide-react';
+import { Users, PlusCircle, Edit, Mail, Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { sendParkerNotification } from '@/app/actions';
+import { Textarea } from '@/components/ui/textarea';
 
 type Parker = {
   id: number;
@@ -82,6 +84,7 @@ export default function ParkersPage() {
   const [parkers, setParkers] = useState<Parker[]>(mockParkers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingParker, setEditingParker] = useState<Parker | null>(null);
+  const [notifyingParkerId, setNotifyingParkerId] = useState<number | null>(null);
 
   const [parkerForm, setParkerForm] = useState(initialFormState);
 
@@ -142,6 +145,40 @@ export default function ParkersPage() {
     }
     setIsDialogOpen(false);
   };
+
+  const handleNotifyParker = async (parker: Parker) => {
+    setNotifyingParkerId(parker.id);
+
+    // Mock data for the notification
+    const notificationData = {
+        name: parker.name,
+        participation: parker.participation,
+        balance: parker.participation === 'monthly' ? 150 : 1800, // Example balance
+        dueDate: new Date(new Date().setDate(new Date().getDate() + 15)).toISOString().split('T')[0], // 15 days from now
+    };
+
+    const { data, error } = await sendParkerNotification(notificationData);
+    setNotifyingParkerId(null);
+
+    if (error) {
+        toast({
+            variant: "destructive",
+            title: "Notification Failed",
+            description: error,
+        });
+    } else if (data) {
+        toast({
+            title: `Email Generated for ${parker.name}`,
+            description: (
+                <div className="w-full">
+                    <p className="font-semibold">{data.subject}</p>
+                    <Textarea readOnly value={data.body} className="mt-2 h-48 w-full" />
+                </div>
+            ),
+            duration: 15000,
+        });
+    }
+  }
 
 
   return (
@@ -264,6 +301,9 @@ export default function ParkersPage() {
                                         </TableCell>
                                         <TableCell>{parker.accessId}</TableCell>
                                         <TableCell className="text-right">
+                                            <Button variant="ghost" size="icon" onClick={() => handleNotifyParker(parker)} disabled={notifyingParkerId === parker.id}>
+                                                {notifyingParkerId === parker.id ? <Loader2 className="size-4 animate-spin" /> : <Mail className="size-4" />}
+                                            </Button>
                                             <Button variant="ghost" size="icon" onClick={() => handleEditClick(parker)}>
                                                 <Edit className="size-4" />
                                             </Button>
@@ -279,5 +319,3 @@ export default function ParkersPage() {
     </div>
   )
 }
-
-    

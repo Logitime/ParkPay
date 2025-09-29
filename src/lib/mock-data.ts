@@ -5,10 +5,10 @@ export const mockGates = [
 ];
 
 export const mockCashiers = [
-    { id: 1, name: "John Doe", assignedGateId: 2, role: 'cashier', email: 'john.doe@example.com' },
-    { id: 2, name: "Jane Smith", assignedGateId: 3, role: 'cashier', email: 'jane.smith@example.com' },
-    { id: 3, name: "Admin User", assignedGateId: null, role: 'admin', email: 'admin@parkpay.co' },
-    { id: 4, name: "Viewer User", assignedGateId: null, role: 'viewer', email: 'viewer@example.com' },
+    { id: 1, name: "John Doe", assignedGateId: 2, role: 'cashier' as const, email: 'john.doe@example.com' },
+    { id: 2, name: "Jane Smith", assignedGateId: 3, role: 'cashier' as const, email: 'jane.smith@example.com' },
+    { id: 3, name: "Admin User", assignedGateId: null, role: 'admin' as const, email: 'admin@parkpay.co' },
+    { id: 4, name: "Viewer User", assignedGateId: null, role: 'viewer' as const, email: 'viewer@example.com' },
 ];
 
 export const initialMockTickets = [

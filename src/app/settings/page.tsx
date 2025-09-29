@@ -162,8 +162,8 @@ export default function SettingsPage() {
             setNewCashierEmail("");
             setNewCashierGateId(null);
             toast({
-                title: "New Cashier Added",
-                description: `Cashier "${newCashierName}" has been created.`,
+                title: "New User Added",
+                description: `User "${newCashierName}" has been created.`,
             });
         }
     };
@@ -239,7 +239,7 @@ export default function SettingsPage() {
                         <TabsTrigger value="gates"><Car className="mr-2" /> Gates</TabsTrigger>
                         <TabsTrigger value="zones"><ParkingSquare className="mr-2" /> Zones</TabsTrigger>
                         <TabsTrigger value="tariffs"><DollarSign className="mr-2" /> Tariffs</TabsTrigger>
-                        <TabsTrigger value="cashiers"><User className="mr-2" /> Cashiers</TabsTrigger>
+                        <TabsTrigger value="cashiers"><User className="mr-2" /> Users</TabsTrigger>
                         <TabsTrigger value="shifts"><Clock className="mr-2" /> Shifts</TabsTrigger>
                     </TabsList>
                     <TabsContent value="general">
@@ -469,8 +469,8 @@ export default function SettingsPage() {
                     <TabsContent value="cashiers">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Cashier Management</CardTitle>
-                                <CardDescription>Manage cashier accounts, roles, and gate assignments.</CardDescription>
+                                <CardTitle>User Management</CardTitle>
+                                <CardDescription>Manage user accounts, roles, and gate assignments.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                {cashiers.map(cashier => {
@@ -519,13 +519,13 @@ export default function SettingsPage() {
                                })}
                                 <Dialog>
                                     <DialogTrigger asChild>
-                                        <Button>Add New Cashier</Button>
+                                        <Button>Add New User</Button>
                                     </DialogTrigger>
                                     <DialogContent>
                                         <DialogHeader>
-                                            <DialogTitle>Add New Cashier</DialogTitle>
+                                            <DialogTitle>Add New User</DialogTitle>
                                             <DialogDescription>
-                                                Enter the details for the new cashier.
+                                                Enter the details for the new user.
                                             </DialogDescription>
                                         </DialogHeader>
                                         <div className="grid gap-4 py-4">
@@ -553,14 +553,14 @@ export default function SettingsPage() {
                                         </div>
                                         <DialogFooter>
                                             <DialogClose asChild>
-                                                <Button type="button" onClick={handleAddNewCashier}>Add Cashier</Button>
+                                                <Button type="button" onClick={handleAddNewCashier}>Add User</Button>
                                             </DialogClose>
                                         </DialogFooter>
                                     </DialogContent>
                                 </Dialog>                            
                             </CardContent>
                              <CardContent>
-                                <Button onClick={() => handleSaveChanges('Cashier')}>Save All Cashier Settings</Button>
+                                <Button onClick={() => handleSaveChanges('User')}>Save All User Settings</Button>
                             </CardContent>
                         </Card>
                     </TabsContent>

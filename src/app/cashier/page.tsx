@@ -25,17 +25,28 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { mockGates, mockCashiers, initialMockTickets, initialMockTransactions } from "@/lib/mock-data";
+import { mockGates, mockCashiers, initialMockTickets, initialMockTransactions, mockParkers } from "@/lib/mock-data";
 
 
-// New complex tariff calculation based on settings.
-// In a real app, this would come from a shared config or API.
-const calculateFee = (durationMinutes: number, ticketType?: 'vip' | 'lost' | 'monthly') => {
-    if (ticketType === 'vip' || ticketType === 'monthly') {
-        return 0.00;
+// In a real app, this tariff configuration would be fetched from a database via an API call
+// For now, we simulate it based on the settings page mock data.
+const tariffConfig = {
+    firstHour: 5,
+    hours2to4: 4,
+    hours5to8: 3,
+    after8Hours: 2,
+    lostTicket: 50,
+    freeParkingTypes: ['vip', 'staff', 'owner']
+};
+
+
+const calculateFee = (durationMinutes: number, parkerType?: string, isLostTicket = false) => {
+    if (isLostTicket) {
+        return tariffConfig.lostTicket;
     }
-    if (ticketType === 'lost') {
-        return 50.00; // Lost ticket fee
+
+    if (parkerType && tariffConfig.freeParkingTypes.includes(parkerType)) {
+        return 0.00;
     }
     
     if (durationMinutes <= 0) return 0;
@@ -44,18 +55,20 @@ const calculateFee = (durationMinutes: number, ticketType?: 'vip' | 'lost' | 'mo
     const hours = Math.ceil(durationMinutes / 60);
 
     if (hours <= 1) {
-        // 1st hour rate
-        fee = 5;
+        fee = tariffConfig.firstHour;
     } else if (hours <= 4) {
-        // 1st hour + next 3 hours
-        fee = 5 + (hours - 1) * 4;
+        fee = tariffConfig.firstHour + (hours - 1) * tariffConfig.hours2to4;
     } else if (hours <= 8) {
-        // 1st hour + next 3 hours + next 4 hours
-        fee = 5 + (3 * 4) + (hours - 4) * 3;
-    } else { // After 8 hours (up to 24)
-        fee = 5 + (3 * 4) + (4 * 3) + (hours - 8) * 2;
+        fee = tariffConfig.firstHour + (3 * tariffConfig.hours2to4) + (hours - 4) * tariffConfig.hours5to8;
+    } else { 
+        fee = tariffConfig.firstHour + (3 * tariffConfig.hours2to4) + (4 * tariffConfig.hours5to8) + (hours - 8) * tariffConfig.after8Hours;
     }
     
+    // Ensure the fee is calculated correctly for the edge case of exactly 1 hour.
+    if (durationMinutes > 0 && durationMinutes <= 60) {
+        return tariffConfig.firstHour;
+    }
+
     return fee;
 }
 
@@ -83,12 +96,16 @@ export default function CashierPage() {
 
     useEffect(() => {
         if (activeTicket) {
-            const diff = currentTime.getTime() - activeTicket.entryTime.getTime();
-            const totalMinutes = Math.max(0, Math.floor(diff / (1000 * 60)));
+            const isLost = activeTicket.id === 'LOST TICKET';
+            let totalMinutes = 0;
+            if (!isLost) {
+                const diff = currentTime.getTime() - activeTicket.entryTime.getTime();
+                totalMinutes = Math.max(0, Math.floor(diff / (1000 * 60)));
+            }
             const hours = Math.floor(totalMinutes / 60);
             const minutes = totalMinutes % 60;
             setDuration({ hours, minutes });
-            setFee(calculateFee(totalMinutes, activeTicket.type));
+            setFee(calculateFee(totalMinutes, activeTicket.type, isLost));
         }
     }, [currentTime, activeTicket]);
 
@@ -97,18 +114,36 @@ export default function CashierPage() {
         setActiveTicket(null);
 
         if (ticketId.toLowerCase() === 'lost') {
-             const lostTicket = { id: "LOST TICKET", entryTime: new Date(), plate: "N/A", status: "Lost", type: 'lost' };
+             const lostTicket = { id: "LOST TICKET", entryTime: new Date(), plate: "N/A", status: "Lost" };
             setActiveTicket(lostTicket);
-            setDuration({hours: 0, minutes: 0});
-            setFee(calculateFee(0, 'lost'));
              toast({
                 variant: "destructive",
                 title: "Lost Ticket",
-                description: `Applying lost ticket fee of $50.00.`,
+                description: `Applying lost ticket fee of $${tariffConfig.lostTicket.toFixed(2)}.`,
             });
             return;
         }
 
+        // Check registered parkers first (by license plate or access ID)
+        const foundParker = mockParkers.find(p => p.plate.toLowerCase() === ticketId.toLowerCase() || p.accessId.toLowerCase() === ticketId.toLowerCase());
+        if (foundParker) {
+             const parkerTicket = {
+                id: foundParker.accessId,
+                entryTime: new Date(new Date().getTime() - 2.5 * 60 * 60 * 1000), // Mock entry time for demonstration
+                plate: foundParker.plate,
+                status: "In-Park",
+                type: foundParker.type,
+                name: foundParker.name,
+            };
+            setActiveTicket(parkerTicket);
+            toast({
+                title: `Registered Parker Found`,
+                description: `Displaying details for ${foundParker.name}.`,
+            });
+            return;
+        }
+
+        // Then check temporary tickets
         const foundTicket = tickets.find(t => t.id.toLowerCase() === ticketId.toLowerCase());
         if (foundTicket) {
             setActiveTicket(foundTicket);
@@ -119,8 +154,8 @@ export default function CashierPage() {
         } else {
             toast({
                 variant: "destructive",
-                title: "Ticket Not Found",
-                description: "No active ticket found with that ID.",
+                title: "Ticket or Parker Not Found",
+                description: "No active ticket or registered parker found with that ID/Plate.",
             });
         }
     };
@@ -155,7 +190,7 @@ export default function CashierPage() {
              toast({ variant: "destructive", title: "No Gate Assigned", description: `Cashier ${activeCashier.name} is not assigned to an exit gate.` });
              return;
         }
-        if (!paymentProcessed) {
+        if (!paymentProcessed && fee > 0) {
             toast({ variant: "destructive", title: "Payment Required", description: "Payment must be processed before opening the gate." });
             return;
         }
@@ -192,6 +227,16 @@ export default function CashierPage() {
         }
     }
 
+    const getParkerBadge = (type?: string) => {
+        if (!type) return null;
+
+        const parkerType = type.charAt(0).toUpperCase() + type.slice(1);
+        if (tariffConfig.freeParkingTypes.includes(type)) {
+            return <Badge className="w-fit bg-green-100 text-green-800">{parkerType} (No Fee)</Badge>;
+        }
+        return <Badge className="w-fit">{parkerType} Parker</Badge>;
+    };
+
     return (
         <div className="flex flex-col h-full">
             <Header title="Cashier Station" />
@@ -214,7 +259,7 @@ export default function CashierPage() {
                                                 </div>
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {mockCashiers.map(c => (
+                                                {mockCashiers.filter(c => c.role === 'cashier').map(c => (
                                                     <SelectItem key={c.id} value={c.id.toString()}>{c.name}'s Station</SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -229,7 +274,7 @@ export default function CashierPage() {
                             <div className="flex w-full max-w-sm items-center space-x-2">
                                 <Input 
                                     type="text" 
-                                    placeholder="Enter Ticket ID or 'lost'..." 
+                                    placeholder="Ticket ID, Plate, Access ID or 'lost'" 
                                     value={ticketId} 
                                     onChange={(e) => setTicketId(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && handleFindTicket()}
@@ -256,17 +301,18 @@ export default function CashierPage() {
                                                 <p className="font-semibold">{activeTicket.plate}</p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <Clock className="size-5 text-muted-foreground" />
-                                            <div>
-                                                <p className="text-muted-foreground">Entry Time</p>
-                                                <p className="font-semibold">{activeTicket.entryTime.toLocaleString()}</p>
+                                         {activeTicket.id !== 'LOST TICKET' && (
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="size-5 text-muted-foreground" />
+                                                <div>
+                                                    <p className="text-muted-foreground">Entry Time</p>
+                                                    <p className="font-semibold">{activeTicket.entryTime.toLocaleString()}</p>
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
-                                    {(activeTicket.type === 'vip' || activeTicket.type === 'monthly') && 
-                                        <Badge className="w-fit">{activeTicket.type.charAt(0).toUpperCase() + activeTicket.type.slice(1)} Parker</Badge>
-                                    }
+                                    {getParkerBadge(activeTicket.type)}
+
                                     <Card className="bg-muted/50">
                                         <CardContent className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
                                             <div className="flex flex-col items-center justify-center space-y-1">
@@ -296,7 +342,7 @@ export default function CashierPage() {
                         <CardFooter className="flex justify-end gap-2">
                              <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                    <Button variant="outline" disabled={!activeTicket || paymentProcessed}>
+                                    <Button variant="outline" disabled={!activeTicket || paymentProcessed || fee <= 0}>
                                         <DollarSign className="mr-2"/> Process Payment
                                     </Button>
                                 </AlertDialogTrigger>
@@ -313,7 +359,7 @@ export default function CashierPage() {
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
-                            <Button onClick={handleOpenGate} disabled={!activeTicket || !paymentProcessed}>Open {assignedGate?.name || 'Exit Gate'}</Button>
+                            <Button onClick={handleOpenGate} disabled={!activeTicket || (!paymentProcessed && fee > 0)}>Open {assignedGate?.name || 'Exit Gate'}</Button>
                         </CardFooter>
                     </Card>
                 </div>
@@ -352,3 +398,5 @@ export default function CashierPage() {
         </div>
     )
 }
+
+    

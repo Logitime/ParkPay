@@ -48,6 +48,7 @@ type Parker = {
   name: string;
   plate: string;
   participation: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  type: 'tenant' | 'owner' | 'vip' | 'staff' | 'visitor';
   accessId: string;
   tel: string;
   email: string;
@@ -56,17 +57,19 @@ type Parker = {
 };
 
 const mockParkers: Parker[] = [
-  { id: 1, name: 'Alice Johnson', plate: 'VIP-001', participation: 'monthly', accessId: 'CARD-1001', tel: '555-1234', email: 'alice@example.com', dob: '1990-05-15', carModel: 'Tesla Model 3' },
-  { id: 2, name: 'Bob Williams', plate: 'EMP-002', participation: 'yearly', accessId: 'CARD-1002', tel: '555-5678', email: 'bob@example.com', dob: '1985-11-20', carModel: 'Ford F-150' },
-  { id: 3, name: 'Charlie Brown', plate: 'WK-003', participation: 'weekly', accessId: 'QR-CODE-XYZ', tel: '555-9876', email: 'charlie@example.com', dob: '1998-02-10', carModel: 'Honda Civic' },
+  { id: 1, name: 'Alice Johnson', plate: 'VIP-001', participation: 'monthly', type: 'vip', accessId: 'CARD-1001', tel: '555-1234', email: 'alice@example.com', dob: '1990-05-15', carModel: 'Tesla Model 3' },
+  { id: 2, name: 'Bob Williams', plate: 'EMP-002', participation: 'yearly', type: 'staff', accessId: 'CARD-1002', tel: '555-5678', email: 'bob@example.com', dob: '1985-11-20', carModel: 'Ford F-150' },
+  { id: 3, name: 'Charlie Brown', plate: 'WK-003', participation: 'weekly', type: 'tenant', accessId: 'QR-CODE-XYZ', tel: '555-9876', email: 'charlie@example.com', dob: '1998-02-10', carModel: 'Honda Civic' },
 ];
 
 const participationOptions = ['daily', 'weekly', 'monthly', 'yearly'];
+const parkerTypeOptions: Parker['type'][] = ['tenant', 'owner', 'vip', 'staff', 'visitor'];
 
 const initialFormState = {
     name: '',
     plate: '',
     participation: 'monthly' as Parker['participation'],
+    type: 'tenant' as Parker['type'],
     accessId: '',
     tel: '',
     email: '',
@@ -88,6 +91,7 @@ export default function ParkersPage() {
         name: parker.name,
         plate: parker.plate,
         participation: parker.participation,
+        type: parker.type,
         accessId: parker.accessId,
         tel: parker.tel,
         email: parker.email,
@@ -187,6 +191,21 @@ export default function ParkersPage() {
                                         <Label htmlFor="carModel" className="text-right">Car Model</Label>
                                         <Input id="carModel" value={parkerForm.carModel} onChange={(e) => handleFormChange('carModel', e.target.value)} className="col-span-3" />
                                     </div>
+                                     <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="type" className="text-right">Parker Type</Label>
+                                        <Select value={parkerForm.type} onValueChange={(value: Parker['type']) => handleFormChange('type', value)}>
+                                            <SelectTrigger className="col-span-3">
+                                                <SelectValue placeholder="Select type" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {parkerTypeOptions.map(opt => (
+                                                    <SelectItem key={opt} value={opt}>
+                                                        {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                     <div className="grid grid-cols-4 items-center gap-4">
                                         <Label htmlFor="participation" className="text-right">Participation</Label>
                                         <Select value={parkerForm.participation} onValueChange={(value: Parker['participation']) => handleFormChange('participation', value)}>
@@ -222,6 +241,7 @@ export default function ParkersPage() {
                                 <TableRow>
                                     <TableHead>Name</TableHead>
                                     <TableHead>Email</TableHead>
+                                    <TableHead>Type</TableHead>
                                     <TableHead>License Plate</TableHead>
                                     <TableHead>Car Model</TableHead>
                                     <TableHead>Participation</TableHead>
@@ -234,6 +254,9 @@ export default function ParkersPage() {
                                     <TableRow key={parker.id}>
                                         <TableCell className="font-medium">{parker.name}</TableCell>
                                         <TableCell>{parker.email}</TableCell>
+                                        <TableCell>
+                                             <Badge variant="outline">{parker.type.charAt(0).toUpperCase() + parker.type.slice(1)}</Badge>
+                                        </TableCell>
                                         <TableCell>{parker.plate}</TableCell>
                                         <TableCell>{parker.carModel}</TableCell>
                                         <TableCell>
@@ -256,3 +279,5 @@ export default function ParkersPage() {
     </div>
   )
 }
+
+    

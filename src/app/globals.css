@@ -86,26 +86,3 @@ body {
     @apply bg-background text-foreground;
   }
 }
-
-@media print {
-  body > * {
-    display: none;
-  }
-  .printable-area {
-    display: block !important;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: auto;
-    border: none;
-    box-shadow: none;
-  }
-  .no-print,
-  .no-print * {
-    display: none !important;
-  }
-  body > .printable-area * {
-    display: initial; /* Or other appropriate display values */
-  }
-}

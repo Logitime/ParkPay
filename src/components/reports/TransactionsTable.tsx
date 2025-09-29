@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/dialog';
 import { Car, Clock, DollarSign, DoorOpen, User, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 const transactions = [
   {
@@ -200,14 +201,46 @@ const DetailRow = ({
 );
 
 function TransactionRow({ transaction }: { transaction: Transaction }) {
+  const dialogContentRef = React.useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
   const handlePrint = () => {
-    // Add printable-area to the body before printing
-    document.body.classList.add('printable-area');
-    window.print();
-    // Remove it after printing
-    document.body.classList.remove('printable-area');
+    const content = dialogContentRef.current;
+    if (!content) {
+        toast({
+            variant: "destructive",
+            title: "Print Error",
+            description: "Could not find receipt content to print.",
+        });
+        return;
+    }
+
+    const printWindow = window.open('', '', 'height=600,width=800');
+    if (printWindow) {
+        printWindow.document.write('<html><head><title>Transaction Receipt</title>');
+        // You can link to an external stylesheet or inject styles directly
+        printWindow.document.write(`
+            <style>
+                body { font-family: sans-serif; }
+                .receipt-details { margin-top: 20px; }
+                .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+                .detail-label { color: #555; }
+                .detail-value { font-weight: bold; }
+                .final-amount .detail-value { font-size: 1.2em; color: #000; }
+            </style>
+        `);
+        printWindow.document.write('</head><body>');
+        printWindow.document.write(content.innerHTML);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+             printWindow.print();
+             printWindow.close();
+        }, 250);
+    }
   };
-  
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -232,11 +265,11 @@ function TransactionRow({ transaction }: { transaction: Transaction }) {
           <TableCell className="text-right">{transaction.amount}</TableCell>
         </TableRow>
       </DialogTrigger>
-      <DialogContent className="printable-area">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Transaction: {transaction.ticketId}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-2 py-4">
+        <div ref={dialogContentRef} className="printable-area space-y-2 py-4">
           <DetailRow
             icon={Car}
             label="License Plate"

@@ -67,8 +67,8 @@ export default function SettingsPage() {
 
     // Gate Settings State
     const [gates, setGates] = useState<Gate[]>([
-        { id: 1, name: "Entry Gate", ip: "10.0.0.185", port: "5000", input: "1", output: "1", serialPort: "", printerPort: "COM1" },
-        { id: 2, name: "Exit Gate", ip: "192.168.1.11", port: "5000", input: "2", output: "2", serialPort: "COM3", printerPort: "COM4" },
+        { id: 1, name: "Entry Gate", ip: "10.0.0.185", port: "5000", input: "1", output: "1", serialPort: "COM3", printerPort: "COM1" },
+        { id: 2, name: "Exit Gate", ip: "192.168.1.11", port: "5000", input: "2", output: "2", serialPort: "COM4", printerPort: "COM2" },
     ]);
     const [autoOpen, setAutoOpen] = useState(true);
     const [newGateName, setNewGateName] = useState("");
@@ -337,9 +337,9 @@ export default function SettingsPage() {
                                                     <Input id={`gate-output-${gate.id}`} type="number" value={gate.output} onChange={(e) => handleGateChange(gate.id, 'output', e.target.value)} placeholder="1" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label htmlFor={`gate-serial-${gate.id}`}>Serial Port for QR Scanner</Label>
+                                                    <Label htmlFor={`gate-serial-${gate.id}`}>Serial Port for QR/RFID Reader</Label>
                                                      <div className="flex items-center gap-2">
-                                                        <QrCode className="size-5 text-muted-foreground" />
+                                                        <KeyRound className="size-5 text-muted-foreground" />
                                                         <Input id={`gate-serial-${gate.id}`} value={gate.serialPort} onChange={(e) => handleGateChange(gate.id, 'serialPort', e.target.value)} placeholder="e.g., COM3" />
                                                     </div>
                                                 </div>
@@ -557,8 +557,8 @@ export default function SettingsPage() {
                                             <p className="text-sm font-medium mb-2">Assigned Users</p>
                                             <div className="flex flex-wrap gap-2">
                                                 {shift.assignedCashierIds.map(id => {
-                                                    const cashier = users.find(c => c.id === id);
-                                                    return cashier ? <Badge key={id} variant="secondary">{cashier.name}</Badge> : null;
+                                                    const user = users.find(c => c.id === id);
+                                                    return user ? <Badge key={id} variant="secondary">{user.name}</Badge> : null;
                                                 })}
                                             </div>
                                         </CardContent>

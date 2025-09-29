@@ -222,7 +222,7 @@ export default function ParkersPage() {
                                         </Select>
                                     </div>
                                     <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="accessId" className="text-right">Access Card/ID</Label>
+                                        <Label htmlFor="accessId" className="text-right">Access ID</Label>
                                         <Input id="accessId" value={parkerForm.accessId} onChange={(e) => handleFormChange('accessId', e.target.value)} className="col-span-3" placeholder="e.g., RFID Card Number" />
                                     </div>
                                 </div>

@@ -34,6 +34,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import QRCode from 'qrcode';
+import Image from 'next/image';
 
 // This is a mock for settings until we fetch them from a persistent store
 const gateSettings = {
@@ -86,6 +88,8 @@ export function GateControl() {
   const [carAtEntry, setCarAtEntry] = useState(false);
   const [carAtExit, setCarAtExit] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
+  const [generatedTicketId, setGeneratedTicketId] = useState<string | null>(null);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const { toast } = useToast();
 
   const pollFailures = useRef({ entry: 0, exit: 0 });
@@ -130,6 +134,23 @@ export function GateControl() {
             variant: 'destructive',
             title: `Gate Action Failed: ${gate}`,
             description: message,
+        });
+    }
+  };
+
+  const handleIssueTicket = async () => {
+    const ticketId = `TKT-${Date.now()}`;
+    setGeneratedTicketId(ticketId);
+    try {
+        const url = await QRCode.toDataURL(ticketId);
+        setQrCodeUrl(url);
+    } catch (err) {
+        console.error("Failed to generate QR code:", err);
+        setQrCodeUrl(null);
+        toast({
+            variant: 'destructive',
+            title: 'QR Code Generation Failed',
+            description: 'Could not generate a QR code for the ticket.',
         });
     }
   };
@@ -261,19 +282,27 @@ export function GateControl() {
           {isEntry ? (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button className="w-full" variant="secondary" disabled={!carDetected || status === 'error'}>
+                <Button className="w-full" variant="secondary" disabled={!carDetected || status === 'error'} onClick={handleIssueTicket}>
                   <Ticket className="mr-2 size-4" /> Issue Ticket
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Ticket Issued</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    A new parking ticket has been printed. The gate will open shortly.
+                   <AlertDialogDescription>
+                    A new parking ticket has been generated. The gate will open after printing.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
+                <div className="flex flex-col items-center justify-center gap-4 py-4">
+                    {qrCodeUrl && <Image src={qrCodeUrl} alt="QR Code" width={200} height={200} />}
+                    <div className="text-center">
+                        <p className="text-sm text-muted-foreground">Ticket ID</p>
+                        <p className="font-mono font-semibold">{generatedTicketId}</p>
+                    </div>
+                </div>
                 <AlertDialogFooter>
-                  <AlertDialogAction>OK</AlertDialogAction>
+                  <AlertDialogAction onClick={() => handleGateAction('entry', 'open')}>Print & Open Gate</AlertDialogAction>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>

@@ -27,13 +27,13 @@ export async function getOccupancyPrediction(input: PredictOccupancyInput): Prom
   }
 }
 
-export const GenerateParkerEmailInputSchema = z.object({
+const GenerateParkerEmailInputSchema = z.object({
   name: z.string().describe('The name of the parker.'),
   participation: z.string().describe('The type of their parking plan (e.g., monthly, yearly).'),
   balance: z.number().describe('The outstanding balance on their account.'),
   dueDate: z.string().describe('The due date for the payment (e.g., YYYY-MM-DD).'),
 });
-export type GenerateParkerEmailInput = z.infer<typeof GenerateParkerEmailInputSchema>;
+type GenerateParkerEmailInput = z.infer<typeof GenerateParkerEmailInputSchema>;
 
 
 export async function sendParkerNotification(input: GenerateParkerEmailInput): Promise<{ data: GenerateParkerEmailOutput | null; error: string | null }> {

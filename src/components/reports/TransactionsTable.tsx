@@ -182,7 +182,7 @@ export function TransactionsTable() {
     React.useState<Transaction | null>(null);
 
   const DetailRow = ({
-    icon,
+    icon: Icon,
     label,
     value,
   }: {
@@ -192,7 +192,7 @@ export function TransactionsTable() {
   }) => (
     <div className="flex items-start justify-between py-2 border-b">
       <div className="flex items-center gap-3">
-        <icon className="size-5 text-muted-foreground" />
+        <Icon className="size-5 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">{label}</span>
       </div>
       <span className="text-sm font-medium text-right">{value}</span>

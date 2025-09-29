@@ -170,11 +170,9 @@ export function GateControl() {
             pollFailures.current.entry = 0; // Reset on success
             if (entryGateStatus === 'error') setEntryGateStatus('closed'); // Recover from error state
           } else {
-             console.error("Error polling entry gate sensor:", entryResponse.message);
              pollFailures.current.entry++;
           }
         } catch (error) {
-          console.error("Error polling entry gate sensor:", error);
           pollFailures.current.entry++;
         }
         if (pollFailures.current.entry >= MAX_FAILURES) {
@@ -192,11 +190,9 @@ export function GateControl() {
                 pollFailures.current.exit = 0; // Reset on success
                 if (exitGateStatus === 'error') setExitGateStatus('closed'); // Recover from error state
             } else {
-                console.error("Error polling exit gate sensor:", exitResponse.message);
                 pollFailures.current.exit++;
             }
         } catch (error) {
-            console.error("Error polling exit gate sensor:", error);
             pollFailures.current.exit++;
         }
         if (pollFailures.current.exit >= MAX_FAILURES) {

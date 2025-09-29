@@ -41,9 +41,9 @@ export function SidebarLinks() {
     <SidebarMenu>
       {links.map((link) => (
         <SidebarMenuItem key={link.href}>
-          <Link href={link.href}>
+          <Link href={link.href} passHref>
             <SidebarMenuButton
-              isActive={pathname === link.href}
+              isActive={pathname === (link.href === '/' ? '/' : `${link.href}`)}
               tooltip={link.label}
             >
               <link.icon />

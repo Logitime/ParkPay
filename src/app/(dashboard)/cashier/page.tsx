@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from "react";
@@ -431,6 +432,3 @@ export default function CashierPage() {
         </div>
     )
 }
-
-    
-    

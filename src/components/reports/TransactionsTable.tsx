@@ -201,7 +201,11 @@ const DetailRow = ({
 
 function TransactionRow({ transaction }: { transaction: Transaction }) {
   const handlePrint = () => {
+    // Add printable-area to the body before printing
+    document.body.classList.add('printable-area');
     window.print();
+    // Remove it after printing
+    document.body.classList.remove('printable-area');
   };
   
   return (

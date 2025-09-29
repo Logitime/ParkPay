@@ -88,14 +88,11 @@ body {
 }
 
 @media print {
-  body * {
-    visibility: hidden;
-  }
-  .printable-area,
-  .printable-area * {
-    visibility: visible;
+  body > * {
+    display: none;
   }
   .printable-area {
+    display: block !important;
     position: absolute;
     left: 0;
     top: 0;
@@ -107,5 +104,8 @@ body {
   .no-print,
   .no-print * {
     display: none !important;
+  }
+  body > .printable-area * {
+    display: initial; /* Or other appropriate display values */
   }
 }

@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Ticket, Car, ParkingCircle, HandCoins, User, Calendar, Smile, Loader2 } from 'lucide-react';
+import { Ticket, Car, ParkingCircle, HandCoins, User, Calendar, Smile, Loader2, Gate, Clock, UserCircle } from 'lucide-react';
 import Image from 'next/image';
 import QRCode from 'qrcode';
 import { cn } from '@/lib/utils';
@@ -26,12 +26,19 @@ const visitorTicket = {
 
 const parkerInfo = mockParkers.find(p => p.type === 'tenant');
 
+type GeneratedTicket = {
+    id: string;
+    gateName: string;
+    entryTime: Date;
+    operatorName: string;
+};
+
 export default function KioskPage() {
     const [mode, setMode] = useState<KioskMode>('entry');
     const [entryState, setEntryState] = useState<EntryState>('idle');
     const [exitState, setExitState] = useState<ExitState>('idle');
     const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
-    const [ticketId, setTicketId] = useState('');
+    const [generatedTicket, setGeneratedTicket] = useState<GeneratedTicket | null>(null);
     const [progress, setProgress] = useState(0);
 
     // Simulate sensor and state changes
@@ -42,6 +49,7 @@ export default function KioskPage() {
             let i = 0;
             interval = setInterval(() => {
                 setEntryState(sequence[i]);
+                 if(i === 0) setGeneratedTicket(null); // Reset ticket when going back to idle
                 i = (i + 1) % sequence.length;
             }, 3000);
         } else {
@@ -68,10 +76,17 @@ export default function KioskPage() {
 
     const handleIssueTicket = async () => {
         setEntryState('issuing_ticket');
-        const newTicketId = `TKT-${Date.now()}`;
-        setTicketId(newTicketId);
+        const newTicket: GeneratedTicket = {
+            id: `TKT-${Date.now()}`,
+            gateName: "Entry Gate 1",
+            entryTime: new Date(),
+            operatorName: "Kiosk System"
+        };
+        
+        setGeneratedTicket(newTicket);
+        
         try {
-            const url = await QRCode.toDataURL(newTicketId, { width: 256 });
+            const url = await QRCode.toDataURL(newTicket.id, { width: 256 });
             setQrCodeUrl(url);
             setTimeout(() => setEntryState('ticket_issued'), 2000);
         } catch (err) {
@@ -103,15 +118,27 @@ export default function KioskPage() {
                     </div>
                 );
             case 'ticket_issued':
+                if (!generatedTicket) return null;
                 return (
                     <div className="text-center">
                         <h2 className="text-3xl font-bold mb-4">Welcome to ParkPay</h2>
-                        <p className="text-lg mb-6">Please take your ticket and proceed.</p>
-                         {qrCodeUrl && <Image src={qrCodeUrl} alt="QR Code" width={180} height={180} className="mx-auto" />}
-                         <p className="font-mono mt-2">{ticketId}</p>
-                        <Card className="mt-6 bg-blue-50 border-blue-200">
-                            <CardContent className="p-4">
-                                <p className="font-semibold text-blue-800">Please keep your ticket in a safe place. You will need it to exit the facility.</p>
+                        <p className="text-lg mb-4">Please take your ticket and proceed.</p>
+                        
+                        <Card className="text-left p-4 bg-gray-50 dark:bg-gray-800">
+                             {qrCodeUrl && <Image src={qrCodeUrl} alt="QR Code" width={128} height={128} className="mx-auto my-2" />}
+                             <p className="font-mono text-center text-lg mb-4">{generatedTicket.id}</p>
+                            <Separator/>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
+                                <div className="flex items-center gap-2"><Gate className="size-4 text-muted-foreground" /> <span>{generatedTicket.gateName}</span></div>
+                                <div className="flex items-center gap-2"><UserCircle className="size-4 text-muted-foreground" /> <span>{generatedTicket.operatorName}</span></div>
+                                <div className="flex items-center gap-2 col-span-2"><Clock className="size-4 text-muted-foreground" /> <span>{generatedTicket.entryTime.toLocaleString()}</span></div>
+                            </div>
+                        </Card>
+                         
+                        <Card className="mt-4 bg-blue-50 border-blue-200">
+                            <CardContent className="p-4 text-blue-800">
+                                <p className="font-semibold text-sm">Note: After 1 hour, rate is $4.00 for the next 3 hours.</p>
+                                <p className="text-xs mt-1">Please keep your ticket safe. You will need it to exit.</p>
                             </CardContent>
                         </Card>
                     </div>
@@ -224,3 +251,5 @@ export default function KioskPage() {
         </div>
     );
 }
+
+    

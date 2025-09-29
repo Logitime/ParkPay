@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState } from "react";
@@ -25,7 +24,7 @@ type Zone = {
     spots: number;
 };
 
-type Cashier = {
+type UserData = {
     id: number;
     name: string;
     email: string;
@@ -97,12 +96,19 @@ export default function SettingsPage() {
     const [newTariffRate, setNewTariffRate] = useState("");
     const [editingTariff, setEditingTariff] = useState<Tariff | null>(null);
 
-    // Cashier Settings State
-    const [cashiers, setCashiers] = useState<Cashier[]>(mockCashiers.map(c => ({...c})));
-    const [newCashierName, setNewCashierName] = useState("");
-    const [newCashierEmail, setNewCashierEmail] = useState("");
-    const [newCashierRole, setNewCashierRole] = useState<Cashier['role']>('cashier');
-    const [newCashierGateId, setNewCashierGateId] = useState<string | null>(null);
+    // User Settings State
+    const [users, setUsers] = useState<UserData[]>(mockCashiers.map(c => ({...c})));
+    const [editingUser, setEditingUser] = useState<UserData | null>(null);
+    const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
+    
+    const initialUserFormState = {
+        name: "",
+        email: "",
+        role: 'cashier' as UserData['role'],
+        assignedGateId: null as number | null,
+    };
+    const [userForm, setUserForm] = useState<Omit<UserData, 'id'>>(initialUserFormState);
+
 
     // Shift Settings State
     const [shifts, setShifts] = useState<Shift[]>([
@@ -156,18 +162,49 @@ export default function SettingsPage() {
         }
     };
     
-    const handleAddNewCashier = () => {
-        if (newCashierName && newCashierEmail) {
-            setCashiers([...cashiers, { id: Date.now(), name: newCashierName, email: newCashierEmail, role: newCashierRole, assignedGateId: newCashierGateId ? parseInt(newCashierGateId) : null }]);
-            setNewCashierName("");
-            setNewCashierEmail("");
-            setNewCashierRole('cashier');
-            setNewCashierGateId(null);
+    const handleAddNewUser = () => {
+        setEditingUser(null);
+        setUserForm(initialUserFormState);
+        setIsUserDialogOpen(true);
+    };
+
+    const handleEditUser = (user: UserData) => {
+        setEditingUser(user);
+        setUserForm({
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            assignedGateId: user.assignedGateId,
+        });
+        setIsUserDialogOpen(true);
+    };
+
+    const handleUserFormChange = (field: keyof typeof userForm, value: any) => {
+        setUserForm(prev => ({...prev, [field]: value}));
+    };
+
+    const handleSaveUser = () => {
+        if (!userForm.name || !userForm.email) {
             toast({
-                title: "New User Added",
-                description: `User "${newCashierName}" has been created.`,
+                variant: 'destructive',
+                title: 'Validation Error',
+                description: 'Name and email are required.',
             });
+            return;
         }
+
+        if (editingUser) {
+            setUsers(users.map(u => u.id === editingUser.id ? {...editingUser, ...userForm} : u));
+            toast({ title: 'User Updated', description: `Details for ${userForm.name} have been updated.` });
+        } else {
+            const newUser: UserData = {
+                id: Date.now(),
+                ...userForm,
+            };
+            setUsers([...users, newUser]);
+            toast({ title: 'User Added', description: `${userForm.name} has been added.` });
+        }
+        setIsUserDialogOpen(false);
     };
 
     const handleAddNewTariff = () => {
@@ -203,10 +240,6 @@ export default function SettingsPage() {
         }
     };
     
-    const handleCashierChange = (cashierId: number, field: keyof Cashier, value: any) => {
-        setCashiers(cashiers.map(c => c.id === cashierId ? { ...c, [field]: value } : c));
-    };
-
     const handleUpdateShift = (updatedShift: Shift) => {
         setShifts(shifts.map(s => s.id === updatedShift.id ? updatedShift : s));
         setEditingShift(null);
@@ -475,114 +508,25 @@ export default function SettingsPage() {
                                 <CardDescription>Manage user accounts, roles, and gate assignments.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                               {cashiers.map(cashier => {
-                                   const gateOptions = cashier.role === 'cashier'
-                                        ? gates.filter(g => g.name.toLowerCase().includes('exit'))
-                                        : cashier.role === 'operator'
-                                        ? gates.filter(g => g.name.toLowerCase().includes('entry'))
-                                        : [];
-
+                               {users.map(user => {
+                                   const gate = user.assignedGateId ? gates.find(g => g.id === user.assignedGateId) : null;
                                    return (
-                                       <div key={cashier.id} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                            <div className="grid gap-4 flex-1">
-                                                <div>
-                                                    <p className="font-medium">{cashier.name}</p>
-                                                    <p className="text-sm text-muted-foreground">{cashier.email}</p>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <KeyRound className="size-4 text-muted-foreground" />
-                                                    <Select value={cashier.role} onValueChange={(value: Cashier['role']) => handleCashierChange(cashier.id, 'role', value)}>
-                                                        <SelectTrigger className="w-[120px]">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="admin">Admin</SelectItem>
-                                                            <SelectItem value="cashier">Cashier</SelectItem>
-                                                            <SelectItem value="operator">Operator</SelectItem>
-                                                            <SelectItem value="viewer">Viewer</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
+                                       <div key={user.id} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                            <div className="flex-1">
+                                                <p className="font-medium">{user.name}</p>
+                                                <p className="text-sm text-muted-foreground">{user.email}</p>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <Car className="size-4 text-muted-foreground" />
-                                                 <Select 
-                                                    value={cashier.assignedGateId?.toString() ?? 'none'} 
-                                                    onValueChange={(value) => handleCashierChange(cashier.id, 'assignedGateId', value === 'none' ? null : parseInt(value))}
-                                                    disabled={cashier.role !== 'cashier' && cashier.role !== 'operator'}
-                                                >
-                                                    <SelectTrigger className="w-[180px]">
-                                                        <SelectValue placeholder="Assign a gate" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="none">None</SelectItem>
-                                                        {gateOptions.map(gate => (
-                                                            <SelectItem key={gate.id} value={gate.id.toString()}>{gate.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
+                                            <div className="flex flex-wrap items-center gap-4">
+                                                <Badge variant="outline" className="capitalize">{user.role}</Badge>
+                                                {gate && <Badge variant="secondary">{gate.name}</Badge>}
+                                                <Button variant="ghost" size="sm" onClick={() => handleEditUser(user)}>
+                                                    Edit
+                                                </Button>
                                             </div>
                                         </div>
                                    )
                                })}
-                                <Dialog>
-                                    <DialogTrigger asChild>
-                                        <Button>Add New User</Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
-                                        <DialogHeader>
-                                            <DialogTitle>Add New User</DialogTitle>
-                                            <DialogDescription>
-                                                Enter the details for the new user.
-                                            </DialogDescription>
-                                        </DialogHeader>
-                                        <div className="grid gap-4 py-4">
-                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="cashier-name" className="text-right">Name</Label>
-                                                <Input id="cashier-name" value={newCashierName} onChange={(e) => setNewCashierName(e.target.value)} className="col-span-3" />
-                                            </div>
-                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="cashier-email" className="text-right">Email</Label>
-                                                <Input id="cashier-email" type="email" value={newCashierEmail} onChange={(e) => setNewCashierEmail(e.target.value)} className="col-span-3" />
-                                            </div>
-                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="cashier-role" className="text-right">Role</Label>
-                                                 <Select value={newCashierRole} onValueChange={(value: Cashier['role']) => setNewCashierRole(value)}>
-                                                    <SelectTrigger className="col-span-3">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="admin">Admin</SelectItem>
-                                                        <SelectItem value="cashier">Cashier</SelectItem>
-                                                        <SelectItem value="operator">Operator</SelectItem>
-                                                        <SelectItem value="viewer">Viewer</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="cashier-gate" className="text-right">Assign Gate</Label>
-                                                 <Select value={newCashierGateId ?? undefined} onValueChange={setNewCashierGateId} disabled={newCashierRole !== 'cashier' && newCashierRole !== 'operator'}>
-                                                    <SelectTrigger className="col-span-3">
-                                                        <SelectValue placeholder="Select a gate" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {(newCashierRole === 'cashier' ? gates.filter(g => g.name.toLowerCase().includes('exit')) : gates.filter(g => g.name.toLowerCase().includes('entry'))).map(gate => (
-                                                            <SelectItem key={gate.id} value={gate.id.toString()}>{gate.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                        </div>
-                                        <DialogFooter>
-                                            <DialogClose asChild>
-                                                <Button type="button" onClick={handleAddNewCashier}>Add User</Button>
-                                            </DialogClose>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>                            
-                            </CardContent>
-                             <CardContent>
-                                <Button onClick={() => handleSaveChanges('User')}>Save All User Settings</Button>
+                               <Button onClick={handleAddNewUser}>Add New User</Button>                         
                             </CardContent>
                         </Card>
                     </TabsContent>
@@ -613,7 +557,7 @@ export default function SettingsPage() {
                                             <p className="text-sm font-medium mb-2">Assigned Cashiers</p>
                                             <div className="flex flex-wrap gap-2">
                                                 {shift.assignedCashierIds.map(id => {
-                                                    const cashier = cashiers.find(c => c.id === id);
+                                                    const cashier = users.find(c => c.id === id);
                                                     return cashier ? <Badge key={id} variant="secondary">{cashier.name}</Badge> : null;
                                                 })}
                                             </div>
@@ -684,7 +628,7 @@ export default function SettingsPage() {
                                     <Label htmlFor="edit-shift-cashiers" className="text-right">Cashiers</Label>
                                     <Combobox
                                         className="col-span-3"
-                                        options={cashiers.filter(c => c.role === 'cashier').map(c => ({ value: c.id.toString(), label: c.name }))}
+                                        options={users.filter(c => c.role === 'cashier').map(c => ({ value: c.id.toString(), label: c.name }))}
                                         selected={editingShift.assignedCashierIds.map(id => id.toString())}
                                         onSelectedChange={(selected) => {
                                             setEditingShift({ ...editingShift, assignedCashierIds: selected.map(s => parseInt(s)) });
@@ -704,7 +648,69 @@ export default function SettingsPage() {
                         </DialogContent>
                     </Dialog>
                 )}
+                <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>{editingUser ? "Edit User" : "Add New User"}</DialogTitle>
+                            <DialogDescription>
+                                Manage user details, roles, and gate assignments.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                             <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="user-name" className="text-right">Name</Label>
+                                <Input id="user-name" value={userForm.name} onChange={(e) => handleUserFormChange('name', e.target.value)} className="col-span-3" />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="user-email" className="text-right">Email</Label>
+                                <Input id="user-email" type="email" value={userForm.email} onChange={(e) => handleUserFormChange('email', e.target.value)} className="col-span-3" />
+                            </div>
+                             <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="user-password" className="text-right">Password</Label>
+                                <Button variant="outline" className="col-span-3" onClick={() => toast({ title: "Password Management", description: "In a real app, this would open a secure password reset flow."})}>Set Password</Button>
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="user-role" className="text-right">Role</Label>
+                                 <Select value={userForm.role} onValueChange={(value: UserData['role']) => handleUserFormChange('role', value)}>
+                                    <SelectTrigger className="col-span-3">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="admin">Admin</SelectItem>
+                                        <SelectItem value="cashier">Cashier</SelectItem>
+                                        <SelectItem value="operator">Operator</SelectItem>
+                                        <SelectItem value="viewer">Viewer</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="user-gate" className="text-right">Assign Gate</Label>
+                                <Select 
+                                    value={userForm.assignedGateId?.toString() ?? 'none'} 
+                                    onValueChange={(value) => handleUserFormChange('assignedGateId', value === 'none' ? null : parseInt(value))}
+                                    disabled={userForm.role !== 'cashier' && userForm.role !== 'operator'}
+                                >
+                                    <SelectTrigger className="col-span-3">
+                                        <SelectValue placeholder="Select a gate" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">None</SelectItem>
+                                        {(userForm.role === 'cashier' ? gates.filter(g => g.name.toLowerCase().includes('exit')) : gates.filter(g => g.name.toLowerCase().includes('entry'))).map(gate => (
+                                            <SelectItem key={gate.id} value={gate.id.toString()}>{gate.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+                            <Button onClick={handleSaveUser}>Save Changes</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </main>
         </div>
     )
 }
+
+    

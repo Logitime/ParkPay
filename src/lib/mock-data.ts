@@ -5,12 +5,12 @@ export const mockGates = [
     { id: 3, name: "Garage P2 Exit", ip: "192.168.1.12", port: "5000", output: "3" },
 ];
 
-export const mockCashiers = [
+export const mockCashiers: { id: number; name: string; assignedGateId: number | null; role: 'admin' | 'cashier' | 'viewer' | 'operator'; email: string; }[] = [
     { id: 1, name: "John Doe", assignedGateId: 2, role: 'cashier' as const, email: 'john.doe@example.com' },
     { id: 2, name: "Jane Smith", assignedGateId: 3, role: 'cashier' as const, email: 'jane.smith@example.com' },
     { id: 3, name: "Admin User", assignedGateId: null, role: 'admin' as const, email: 'admin@parkpay.co' },
     { id: 4, name: "Viewer User", assignedGateId: null, role: 'viewer' as const, email: 'viewer@example.com' },
-    { id: 5, name: "Operator User", assignedGateId: null, role: 'operator' as const, email: 'operator@example.com' },
+    { id: 5, name: "Operator User", assignedGateId: 1, role: 'operator' as const, email: 'operator@example.com' },
 ];
 
 export const initialMockTickets = [
@@ -24,3 +24,5 @@ export const initialMockTransactions = [
     { ticketId: "T84B2-2", plate: "BC-9102", exit: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), status: "Paid", amount: 9.00 },
     { ticketId: "T84B2-4", plate: "DE-4455", exit: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), status: "Paid", amount: 5.00 },
 ];
+
+    

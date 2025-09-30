@@ -5,7 +5,6 @@ import { Wifi, WifiOff, Car, Loader2, TriangleAlert } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { readGateSensor } from '@/app/actions';
 import { cn } from "@/lib/utils";
-import { useTranslations } from "next-intl";
 
 // Mock settings until they are fetched from a persistent store
 const gateSettings = {
@@ -18,7 +17,6 @@ const gateSettings = {
 type ConnectionStatus = 'online' | 'offline' | 'checking';
 
 export function GateStatusIndicator() {
-    const t = useTranslations('Dashboard');
     const [entryStatus, setEntryStatus] = useState<ConnectionStatus>('checking');
     const [exitStatus, setExitStatus] = useState<ConnectionStatus>('checking');
     
@@ -26,9 +24,9 @@ export function GateStatusIndicator() {
     const MAX_FAILURES = 3;
     
     const statusConfig: Record<ConnectionStatus, { text: string; icon: React.ReactNode; color: string }> = {
-      online: { text: t('online'), icon: <Wifi className="size-5" />, color: 'text-green-500' },
-      offline: { text: t('offline'), icon: <WifiOff className="size-5" />, color: 'text-destructive' },
-      checking: { text: t('checking'), icon: <Loader2 className="size-5 animate-spin" />, color: 'text-muted-foreground' },
+      online: { text: 'Online', icon: <Wifi className="size-5" />, color: 'text-green-500' },
+      offline: { text: 'Offline', icon: <WifiOff className="size-5" />, color: 'text-destructive' },
+      checking: { text: 'Checking...', icon: <Loader2 className="size-5 animate-spin" />, color: 'text-muted-foreground' },
     };
 
     useEffect(() => {
@@ -94,16 +92,16 @@ export function GateStatusIndicator() {
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div>
-                        <CardTitle>{t('gateConnections')}</CardTitle>
-                        <CardDescription>{t('gateConnectionsDescription')}</CardDescription>
+                        <CardTitle>Gate Connections</CardTitle>
+                        <CardDescription>Live status of the gate relays.</CardDescription>
                     </div>
                      <Wifi className="h-8 w-8 text-primary" />
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="space-y-4">
-                    <GateConnection name={t('entryGate')} status={entryStatus} />
-                    <GateConnection name={t('exitGate')} status={exitStatus} />
+                    <GateConnection name="Entry Gate" status={entryStatus} />
+                    <GateConnection name="Exit Gate" status={exitStatus} />
                 </div>
             </CardContent>
         </Card>

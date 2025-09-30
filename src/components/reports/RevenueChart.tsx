@@ -1,7 +1,6 @@
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
-import { useTranslations } from "next-intl";
 
 
 const data = [
@@ -18,13 +17,12 @@ const data = [
 ];
 
 export function RevenueChart({ filters }: { filters: any }) {
-    const t = useTranslations('Reports');
     // In a real app, you would use the `filters` prop to fetch and display dynamic data.
     return (
         <Card>
             <CardHeader>
-                <CardTitle>{t('revenueOverTime')}</CardTitle>
-                <CardDescription>{t('revenueDaily')}</CardDescription>
+                <CardTitle>Revenue Over Time</CardTitle>
+                <CardDescription>Daily revenue for the selected period.</CardDescription>
             </CardHeader>
             <CardContent>
                 <ResponsiveContainer width="100%" height={350}>

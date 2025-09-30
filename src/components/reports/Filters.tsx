@@ -1,4 +1,3 @@
-
 "use client";
 
 import { DateRangePicker } from "./DateRangePicker";
@@ -12,7 +11,6 @@ import {
 import { mockCashiers, mockGates } from "@/lib/mock-data";
 import { User, Clock, DoorOpen } from "lucide-react";
 import { DateRange } from "react-day-picker";
-import { useTranslations } from "next-intl";
 
 
 type FiltersProps = {
@@ -36,7 +34,6 @@ export function Filters({
     selectedGate,
     onGateChange
 }: FiltersProps) {
-  const t = useTranslations('Reports');
   return (
     <div className="flex flex-wrap items-center gap-4">
       <DateRangePicker date={date} onDateChange={onDateChange} />
@@ -44,11 +41,11 @@ export function Filters({
         <SelectTrigger className="w-full sm:w-[180px]">
           <div className="flex items-center gap-2">
             <User className="size-4" />
-            <SelectValue placeholder={t('allCashiers')} />
+            <SelectValue placeholder="All Cashiers" />
           </div>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">{t('allCashiers')}</SelectItem>
+          <SelectItem value="all">All Cashiers</SelectItem>
           {mockCashiers.filter(c => c.role === 'cashier').map(cashier => (
               <SelectItem key={cashier.id} value={cashier.id.toString()}>
                   {cashier.name}
@@ -60,24 +57,24 @@ export function Filters({
         <SelectTrigger className="w-full sm:w-[180px]">
             <div className="flex items-center gap-2">
                 <Clock className="size-4" />
-                <SelectValue placeholder={t('allDay')} />
+                <SelectValue placeholder="All Day" />
             </div>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">{t('allDay')}</SelectItem>
-          <SelectItem value="morning">{t('morningShift')}</SelectItem>
-          <SelectItem value="evening">{t('eveningShift')}</SelectItem>
+          <SelectItem value="all">All Day</SelectItem>
+          <SelectItem value="morning">Morning Shift (8am-4pm)</SelectItem>
+          <SelectItem value="evening">Evening Shift (4pm-12am)</SelectItem>
         </SelectContent>
       </Select>
       <Select value={selectedGate} onValueChange={onGateChange}>
         <SelectTrigger className="w-full sm:w-[180px]">
             <div className="flex items-center gap-2">
                 <DoorOpen className="size-4" />
-                <SelectValue placeholder={t('allGates')} />
+                <SelectValue placeholder="All Gates" />
             </div>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">{t('allGates')}</SelectItem>
+          <SelectItem value="all">All Gates</SelectItem>
           {mockGates.map(gate => (
               <SelectItem key={gate.id} value={gate.id.toString()}>
                   {gate.name}

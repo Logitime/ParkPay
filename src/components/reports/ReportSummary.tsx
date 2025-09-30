@@ -1,14 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Receipt, Clock } from "lucide-react";
-import { useTranslations } from "next-intl";
 
 
 export function ReportSummary({ filters }: { filters: any }) {
-    const t = useTranslations('Reports');
     const summaryData = [
-        { title: t('totalRevenue'), value: "$12,408.50", icon: DollarSign, change: t('fromLastMonth', {change: "+15.2%"}) },
-        { title: t('totalTransactions'), value: "1,890", icon: Receipt, change: t('fromLastMonth', {change: "+8.1%"}) },
-        { title: t('avgDuration'), value: "1h 24m", icon: Clock, change: t('fromLastMonth', {change: "-2.3%"}) },
+        { title: "Total Revenue", value: "$12,408.50", icon: DollarSign, change: "+15.2% from last month" },
+        { title: "Total Transactions", value: "1,890", icon: Receipt, change: "+8.1% from last month" },
+        { title: "Avg. Park Duration", value: "1h 24m", icon: Clock, change: "-2.3% from last month" },
     ]
     // In a real app, you would use the `filters` prop to fetch and display dynamic data.
     return (

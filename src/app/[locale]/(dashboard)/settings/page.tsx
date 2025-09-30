@@ -18,6 +18,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { mockCashiers } from "@/lib/mock-data";
 import { Combobox } from "@/components/ui/combobox";
 import { Badge } from "@/components/ui/badge";
+import { useTranslations } from "next-intl";
+
 
 type Zone = {
     id: number;
@@ -62,6 +64,7 @@ type Shift = {
 }
 
 export default function SettingsPage() {
+    const t = useTranslations('Settings');
     const { toast } = useToast();
 
     // General Settings State
@@ -126,8 +129,8 @@ export default function SettingsPage() {
 
     const handleSaveChanges = (section: string) => {
         toast({
-            title: "Settings Saved",
-            description: `${section} settings have been successfully saved.`,
+            title: t('settingsSaved'),
+            description: t('settingsSavedDescription', {section}),
         });
     };
 
@@ -149,8 +152,8 @@ export default function SettingsPage() {
             setNewGateName("");
             setNewGateIp("");
             toast({
-                title: "New Gate Added",
-                description: `Gate "${newGateName}" has been created.`,
+                title: t('newGateAdded'),
+                description: t('newGateAddedDescription', {name: newGateName}),
             });
         }
     };
@@ -165,8 +168,8 @@ export default function SettingsPage() {
             setNewZoneName("");
             setNewZoneSpots("");
             toast({
-                title: "New Zone Added",
-                description: `Zone "${newZoneName}" has been created.`,
+                title: t('newZoneAdded'),
+                description: t('newZoneAddedDescription', {name: newZoneName}),
             });
         }
     };
@@ -204,14 +207,14 @@ export default function SettingsPage() {
 
         if (editingUser) {
             setUsers(users.map(u => u.id === editingUser.id ? {...editingUser, ...userForm} : u));
-            toast({ title: 'User Updated', description: `Details for ${userForm.name} have been updated.` });
+            toast({ title: t('userUpdated'), description: t('userUpdatedDescription', {name: userForm.name}) });
         } else {
             const newUser: UserData = {
                 id: Date.now(),
                 ...userForm,
             };
             setUsers([...users, newUser]);
-            toast({ title: 'User Added', description: `${userForm.name} has been added.` });
+            toast({ title: t('userAdded'), description: t('userAddedDescription', {name: userForm.name}) });
         }
         setIsUserDialogOpen(false);
     };
@@ -222,8 +225,8 @@ export default function SettingsPage() {
             setNewTariffName("");
             setNewTariffRate("");
             toast({
-                title: "New Tariff Added",
-                description: `Tariff "${newTariffName}" has been created.`,
+                title: t('newTariffAdded'),
+                description: t('newTariffAddedDescription', {name: newTariffName}),
             });
         }
     };
@@ -242,8 +245,8 @@ export default function SettingsPage() {
         if (editingTariff) {
             setTariffs(tariffs.map(t => t.id === editingTariff.id ? editingTariff : t));
             toast({
-                title: "Tariff Updated",
-                description: `Tariff "${editingTariff.name}" has been updated.`,
+                title: t('tariffUpdated'),
+                description: t('tariffUpdatedDescription', {name: editingTariff.name}),
             });
             setEditingTariff(null);
         }
@@ -252,7 +255,7 @@ export default function SettingsPage() {
     const handleUpdateShift = (updatedShift: Shift) => {
         setShifts(shifts.map(s => s.id === updatedShift.id ? updatedShift : s));
         setEditingShift(null);
-        toast({ title: "Shift Updated", description: `Shift "${updatedShift.name}" has been saved.` });
+        toast({ title: t('shiftUpdated'), description: t('shiftUpdatedDescription', {name: updatedShift.name}) });
     };
 
     const handleAddShift = () => {
@@ -269,44 +272,44 @@ export default function SettingsPage() {
 
     const handleDeleteShift = (shiftId: number) => {
         setShifts(shifts.filter(s => s.id !== shiftId));
-        toast({ title: "Shift Deleted", variant: "destructive" });
+        toast({ title: t('deleteShift'), variant: "destructive" });
     };
 
 
     return (
         <div className="flex flex-col h-full">
-            <Header title="Settings" />
+            <Header title={t('title')} />
             <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
                  <Tabs defaultValue="general">
                     <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-                        <TabsTrigger value="general"><Settings className="mr-2" /> General</TabsTrigger>
-                        <TabsTrigger value="gates"><Car className="mr-2" /> Gates</TabsTrigger>
-                        <TabsTrigger value="zones"><ParkingSquare className="mr-2" /> Zones</TabsTrigger>
-                        <TabsTrigger value="tariffs"><DollarSign className="mr-2" /> Tariffs</TabsTrigger>
-                        <TabsTrigger value="users"><User className="mr-2" /> Users</TabsTrigger>
-                        <TabsTrigger value="shifts"><Clock className="mr-2" /> Shifts</TabsTrigger>
+                        <TabsTrigger value="general"><Settings className="mr-2" /> {t('general')}</TabsTrigger>
+                        <TabsTrigger value="gates"><Car className="mr-2" /> {t('gates')}</TabsTrigger>
+                        <TabsTrigger value="zones"><ParkingSquare className="mr-2" /> {t('zones')}</TabsTrigger>
+                        <TabsTrigger value="tariffs"><DollarSign className="mr-2" /> {t('tariffs')}</TabsTrigger>
+                        <TabsTrigger value="users"><User className="mr-2" /> {t('users')}</TabsTrigger>
+                        <TabsTrigger value="shifts"><Clock className="mr-2" /> {t('shifts')}</TabsTrigger>
                     </TabsList>
                     <TabsContent value="general">
                         <Card>
                             <CardHeader>
-                                <CardTitle>General Settings</CardTitle>
-                                <CardDescription>Manage general application settings.</CardDescription>
+                                <CardTitle>{t('general')}</CardTitle>
+                                <CardDescription>{t('generalDescription')}</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 <div className="flex items-center justify-between space-x-2 p-4 border rounded-lg">
                                     <div className="space-y-0.5">
-                                        <Label htmlFor="dark-mode">Dark Mode</Label>
+                                        <Label htmlFor="dark-mode">{t('darkMode')}</Label>
                                         <p className="text-xs text-muted-foreground">
-                                            Enable or disable dark mode for the application.
+                                            {t('darkModeDescription')}
                                         </p>
                                     </div>
                                     <Switch id="dark-mode" checked={darkMode} onCheckedChange={setDarkMode} />
                                 </div>
                                 <div className="flex items-center justify-between space-x-2 p-4 border rounded-lg">
                                     <div className="space-y-0.5">
-                                        <Label htmlFor="notifications">Email Notifications</Label>
+                                        <Label htmlFor="notifications">{t('emailNotifications')}</Label>
                                         <p className="text-xs text-muted-foreground">
-                                            Receive email notifications for critical system events.
+                                            {t('emailNotificationsDescription')}
                                         </p>
                                     </div>
                                     <Switch id="notifications" checked={emailNotifications} onCheckedChange={setEmailNotifications} />
@@ -315,44 +318,44 @@ export default function SettingsPage() {
                                     <CardHeader>
                                         <div className="flex items-center gap-2">
                                             <Mail className="size-5" />
-                                            <CardTitle className="text-lg">Email (SMTP) Settings</CardTitle>
+                                            <CardTitle className="text-lg">{t('emailSettings')}</CardTitle>
                                         </div>
                                         <CardDescription>
-                                            Configure your Gmail SMTP server for sending notifications. For this to work, you may need to create an "App Password" in your Google Account settings.
+                                            {t('emailSettingsDescription')}
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div className="grid sm:grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                <Label htmlFor="smtp-host">SMTP Host</Label>
+                                                <Label htmlFor="smtp-host">{t('smtpHost')}</Label>
                                                 <Input id="smtp-host" value={smtpHost} onChange={(e) => setSmtpHost(e.target.value)} />
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="smtp-port">SMTP Port</Label>
+                                                <Label htmlFor="smtp-port">{t('smtpPort')}</Label>
                                                 <Input id="smtp-port" value={smtpPort} onChange={(e) => setSmtpPort(e.target.value)} />
                                             </div>
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="smtp-user">Gmail Address</Label>
+                                            <Label htmlFor="smtp-user">{t('gmailAddress')}</Label>
                                             <Input id="smtp-user" type="email" placeholder="you@gmail.com" value={smtpUser} onChange={(e) => setSmtpUser(e.target.value)} />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="smtp-pass">App Password</Label>
+                                            <Label htmlFor="smtp-pass">{t('appPassword')}</Label>
                                             <Input id="smtp-pass" type="password" placeholder="••••••••••••••••" value={smtpPass} onChange={(e) => setSmtpPass(e.target.value)} />
                                         </div>
                                     </CardContent>
                                 </Card>
                             </CardContent>
                             <CardContent>
-                                <Button onClick={() => handleSaveChanges('General')}>Save General Settings</Button>
+                                <Button onClick={() => handleSaveChanges(t('general'))}>{t('saveGeneral')}</Button>
                             </CardContent>
                         </Card>
                     </TabsContent>
                     <TabsContent value="gates">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Gate Management</CardTitle>
-                                <CardDescription>Configure entry and exit gate settings.</CardDescription>
+                                <CardTitle>{t('gateManagement')}</CardTitle>
+                                <CardDescription>{t('gateManagementDescription')}</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -361,44 +364,44 @@ export default function SettingsPage() {
                                             <h3 className="text-lg font-semibold mb-4">{gate.name}</h3>
                                             <div className="space-y-4">
                                                 <div className="space-y-2">
-                                                    <Label htmlFor={`gate-ip-${gate.id}`}>Relay IP Address</Label>
+                                                    <Label htmlFor={`gate-ip-${gate.id}`}>{t('relayIp')}</Label>
                                                     <Input id={`gate-ip-${gate.id}`} value={gate.ip} onChange={(e) => handleGateChange(gate.id, 'ip', e.target.value)} placeholder="192.168.1.10" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label htmlFor={`gate-port-${gate.id}`}>Network Port</Label>
+                                                    <Label htmlFor={`gate-port-${gate.id}`}>{t('networkPort')}</Label>
                                                     <Input id={`gate-port-${gate.id}`} type="number" value={gate.port} onChange={(e) => handleGateChange(gate.id, 'port', e.target.value)} placeholder="5000" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label htmlFor={`gate-input-${gate.id}`}>Car Detect Port (Input)</Label>
+                                                    <Label htmlFor={`gate-input-${gate.id}`}>{t('carDetectPort')}</Label>
                                                     <Input id={`gate-input-${gate.id}`} type="number" value={gate.input} onChange={(e) => handleGateChange(gate.id, 'input', e.target.value)} placeholder="1" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label htmlFor={`gate-output-${gate.id}`}>Open Gate Port (Output)</Label>
+                                                    <Label htmlFor={`gate-output-${gate.id}`}>{t('openGatePort')}</Label>
                                                     <Input id={`gate-output-${gate.id}`} type="number" value={gate.output} onChange={(e) => handleGateChange(gate.id, 'output', e.target.value)} placeholder="1" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                     <Label htmlFor={`gate-camera-${gate.id}`}>Camera URL</Label>
+                                                     <Label htmlFor={`gate-camera-${gate.id}`}>{t('cameraUrl')}</Label>
                                                       <div className="flex items-center gap-2">
                                                         <Camera className="size-5 text-muted-foreground" />
                                                         <Input id={`gate-camera-${gate.id}`} value={gate.cameraUrl} onChange={(e) => handleGateChange(gate.id, 'cameraUrl', e.target.value)} placeholder="e.g., rtsp://..." />
                                                     </div>
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label htmlFor={`gate-rfid-${gate.id}`}>Serial Port for RFID Reader</Label>
+                                                    <Label htmlFor={`gate-rfid-${gate.id}`}>{t('rfidPort')}</Label>
                                                      <div className="flex items-center gap-2">
                                                         <KeyRound className="size-5 text-muted-foreground" />
                                                         <Input id={`gate-rfid-${gate.id}`} value={gate.rfidReaderPort} onChange={(e) => handleGateChange(gate.id, 'rfidReaderPort', e.target.value)} placeholder="e.g., COM3" />
                                                     </div>
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label htmlFor={`gate-qr-${gate.id}`}>Serial Port for QR Reader</Label>
+                                                    <Label htmlFor={`gate-qr-${gate.id}`}>{t('qrPort')}</Label>
                                                      <div className="flex items-center gap-2">
                                                         <QrCode className="size-5 text-muted-foreground" />
                                                         <Input id={`gate-qr-${gate.id}`} value={gate.qrReaderPort} onChange={(e) => handleGateChange(gate.id, 'qrReaderPort', e.target.value)} placeholder="e.g., COM5" />
                                                     </div>
                                                 </div>
                                                  <div className="space-y-2">
-                                                    <Label htmlFor={`gate-printer-${gate.id}`}>Serial Port for Thermal Printer</Label>
+                                                    <Label htmlFor={`gate-printer-${gate.id}`}>{t('printerPort')}</Label>
                                                      <div className="flex items-center gap-2">
                                                         <Printer className="size-5 text-muted-foreground" />
                                                         <Input id={`gate-printer-${gate.id}`} value={gate.printerPort} onChange={(e) => handleGateChange(gate.id, 'printerPort', e.target.value)} placeholder="e.g., COM1" />
@@ -410,9 +413,9 @@ export default function SettingsPage() {
                                 </div>
                                 <div className="flex items-center justify-between space-x-2 p-4 border rounded-lg mt-6">
                                     <div className="space-y-0.5">
-                                        <Label htmlFor="auto-open">Automatic Opening</Label>
+                                        <Label htmlFor="auto-open">{t('autoOpening')}</Label>
                                         <p className="text-xs text-muted-foreground">
-                                            Automatically open gates on valid ticket scan.
+                                            {t('autoOpeningDescription')}
                                         </p>
                                     </div>
                                     <Switch id="auto-open" checked={autoOpen} onCheckedChange={setAutoOpen} />
@@ -421,76 +424,76 @@ export default function SettingsPage() {
                              <CardContent className="flex flex-col items-start gap-4">
                                 <Dialog>
                                     <DialogTrigger asChild>
-                                        <Button variant="outline">Add New Gate</Button>
+                                        <Button variant="outline">{t('addNewGate')}</Button>
                                     </DialogTrigger>
                                     <DialogContent>
                                         <DialogHeader>
-                                            <DialogTitle>Add New Gate</DialogTitle>
+                                            <DialogTitle>{t('addNewGate')}</DialogTitle>
                                             <DialogDescription>
-                                                Enter the details for the new gate.
+                                                {t('addNewGateDescription')}
                                             </DialogDescription>
                                         </DialogHeader>
                                         <div className="grid gap-4 py-4">
                                             <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="gate-name" className="text-right">Name</Label>
+                                                <Label htmlFor="gate-name" className="text-right">{t('gateName')}</Label>
                                                 <Input id="gate-name" value={newGateName} onChange={(e) => setNewGateName(e.target.value)} className="col-span-3" placeholder="e.g., Garage P2 Entry" />
                                             </div>
                                             <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="gate-ip-new" className="text-right">IP Address</Label>
+                                                <Label htmlFor="gate-ip-new" className="text-right">{t('ipAddress')}</Label>
                                                 <Input id="gate-ip-new" value={newGateIp} onChange={(e) => setNewGateIp(e.target.value)} className="col-span-3" placeholder="192.168.1.12" />
                                             </div>
                                         </div>
                                         <DialogFooter>
                                             <DialogClose asChild>
-                                                <Button type="button" onClick={handleAddNewGate}>Add Gate</Button>
+                                                <Button type="button" onClick={handleAddNewGate}>{t('addGate')}</Button>
                                             </DialogClose>
                                         </DialogFooter>
                                     </DialogContent>
                                 </Dialog>
-                                <Button onClick={() => handleSaveChanges('Gate')}>Save All Gate Settings</Button>
+                                <Button onClick={() => handleSaveChanges(t('gates'))}>{t('saveAllGates')}</Button>
                             </CardContent>
                         </Card>
                     </TabsContent>
                     <TabsContent value="zones">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Zone Management</CardTitle>
-                                <CardDescription>Add, remove, or edit parking zones.</CardDescription>
+                                <CardTitle>{t('zoneManagement')}</CardTitle>
+                                <CardDescription>{t('zoneManagementDescription')}</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {zones.map(zone => (
                                 <div key={zone.id} className="border rounded-lg p-4 flex justify-between items-center">
                                     <div>
                                         <p className="font-medium">{zone.name}</p>
-                                        <p className="text-sm text-muted-foreground">{zone.spots} spots</p>
+                                        <p className="text-sm text-muted-foreground">{zone.spots} {t('spots')}</p>
                                     </div>
-                                    <Button variant="outline" size="sm">Edit</Button>
+                                    <Button variant="outline" size="sm">{t('edit')}</Button>
                                 </div>
                                 ))}
                                 <Dialog>
                                     <DialogTrigger asChild>
-                                        <Button>Add New Zone</Button>
+                                        <Button>{t('addNewZone')}</Button>
                                     </DialogTrigger>
                                     <DialogContent>
                                         <DialogHeader>
-                                            <DialogTitle>Add New Zone</DialogTitle>
+                                            <DialogTitle>{t('addNewZone')}</DialogTitle>
                                             <DialogDescription>
-                                                Enter the details for the new parking zone.
+                                                {t('addNewZoneDescription')}
                                             </DialogDescription>
                                         </DialogHeader>
                                         <div className="grid gap-4 py-4">
                                             <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="zone-name" className="text-right">Name</Label>
+                                                <Label htmlFor="zone-name" className="text-right">{t('gateName')}</Label>
                                                 <Input id="zone-name" value={newZoneName} onChange={(e) => setNewZoneName(e.target.value)} className="col-span-3" />
                                             </div>
                                             <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="zone-spots" className="text-right">Spots</Label>
+                                                <Label htmlFor="zone-spots" className="text-right">{t('spots')}</Label>
                                                 <Input id="zone-spots" type="number" value={newZoneSpots} onChange={(e) => setNewZoneSpots(e.target.value)} className="col-span-3" />
                                             </div>
                                         </div>
                                         <DialogFooter>
                                             <DialogClose asChild>
-                                                <Button type="button" onClick={handleAddNewZone}>Add Zone</Button>
+                                                <Button type="button" onClick={handleAddNewZone}>{t('addZone')}</Button>
                                             </DialogClose>
                                         </DialogFooter>
                                     </DialogContent>
@@ -501,8 +504,8 @@ export default function SettingsPage() {
                     <TabsContent value="tariffs">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Tariff Management</CardTitle>
-                                <CardDescription>Set parking rates and rules. These are used by the cashier page.</CardDescription>
+                                <CardTitle>{t('tariffManagement')}</CardTitle>
+                                <CardDescription>{t('tariffManagementDescription')}</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {tariffs.map(tariff => (
@@ -515,7 +518,7 @@ export default function SettingsPage() {
                                             <span className="text-lg font-semibold min-w-[80px] text-right">{tariff.rate}</span>
                                             <Dialog>
                                                 <DialogTrigger asChild>
-                                                    <Button variant="outline" size="sm" onClick={() => handleEditTariff(tariff)}>Edit</Button>
+                                                    <Button variant="outline" size="sm" onClick={() => handleEditTariff(tariff)}>{t('edit')}</Button>
                                                 </DialogTrigger>
                                             </Dialog>
                                         </div>
@@ -523,43 +526,43 @@ export default function SettingsPage() {
                                 ))}
                                 <Dialog>
                                     <DialogTrigger asChild>
-                                        <Button>Add New Tariff</Button>
+                                        <Button>{t('addNewTariff')}</Button>
                                     </DialogTrigger>
                                     <DialogContent>
                                         <DialogHeader>
-                                            <DialogTitle>Add New Tariff</DialogTitle>
+                                            <DialogTitle>{t('addNewTariff')}</DialogTitle>
                                             <DialogDescription>
-                                                Enter the details for the new tariff.
+                                                {t('addNewTariffDescription')}
                                             </DialogDescription>
                                         </DialogHeader>
                                         <div className="grid gap-4 py-4">
                                             <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="tariff-name" className="text-right">Name</Label>
+                                                <Label htmlFor="tariff-name" className="text-right">{t('gateName')}</Label>
                                                 <Input id="tariff-name" value={newTariffName} onChange={(e) => setNewTariffName(e.target.value)} className="col-span-3" />
                                             </div>
                                             <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="tariff-rate" className="text-right">Rate ($)</Label>
+                                                <Label htmlFor="tariff-rate" className="text-right">{t('rate')}</Label>
                                                 <Input id="tariff-rate" value={newTariffRate} onChange={(e) => setNewTariffRate(e.target.value)} className="col-span-3" />
                                             </div>
                                         </div>
                                         <DialogFooter>
                                             <DialogClose asChild>
-                                                <Button type="button" onClick={handleAddNewTariff}>Add Tariff</Button>
+                                                <Button type="button" onClick={handleAddNewTariff}>{t('addTariff')}</Button>
                                             </DialogClose>
                                         </DialogFooter>
                                     </DialogContent>
                                 </Dialog>
                             </CardContent>
                              <CardContent>
-                                <Button onClick={() => handleSaveChanges('Tariff')}>Save All Tariffs</Button>
+                                <Button onClick={() => handleSaveChanges(t('tariffs'))}>{t('saveAllTariffs')}</Button>
                             </CardContent>
                         </Card>
                     </TabsContent>
                     <TabsContent value="users">
                         <Card>
                             <CardHeader>
-                                <CardTitle>User Management</CardTitle>
-                                <CardDescription>Manage user accounts, roles, and gate assignments.</CardDescription>
+                                <CardTitle>{t('userManagement')}</CardTitle>
+                                <CardDescription>{t('userManagementDescription')}</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                {users.map(user => {
@@ -574,13 +577,13 @@ export default function SettingsPage() {
                                                 <Badge variant="outline" className="capitalize">{user.role}</Badge>
                                                 {gate && <Badge variant="secondary">{gate.name}</Badge>}
                                                 <Button variant="ghost" size="sm" onClick={() => handleEditUser(user)}>
-                                                    Edit
+                                                    {t('edit')}
                                                 </Button>
                                             </div>
                                         </div>
                                    )
                                })}
-                               <Button onClick={handleAddNewUser}>Add New User</Button>                         
+                               <Button onClick={handleAddNewUser}>{t('addNewUser')}</Button>                         
                             </CardContent>
                         </Card>
                     </TabsContent>
@@ -588,10 +591,10 @@ export default function SettingsPage() {
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <div>
-                                    <CardTitle>Shift Management</CardTitle>
-                                    <CardDescription>Define work shifts and assign users.</CardDescription>
+                                    <CardTitle>{t('shiftManagement')}</CardTitle>
+                                    <CardDescription>{t('shiftManagementDescription')}</CardDescription>
                                 </div>
-                                <Button onClick={handleAddShift}>Add New Shift</Button>
+                                <Button onClick={handleAddShift}>{t('addNewShift')}</Button>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {shifts.map(shift => (
@@ -600,7 +603,7 @@ export default function SettingsPage() {
                                              <p className="font-semibold">{shift.name} ({shift.startTime} - {shift.endTime})</p>
                                              <div>
                                                 <Button variant="ghost" size="icon" onClick={() => setEditingShift(shift)}>
-                                                   Edit
+                                                   {t('edit')}
                                                 </Button>
                                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteShift(shift.id)}>
                                                     <Trash2 className="size-4" />
@@ -608,7 +611,7 @@ export default function SettingsPage() {
                                              </div>
                                         </CardHeader>
                                         <CardContent>
-                                            <p className="text-sm font-medium mb-2">Assigned Users</p>
+                                            <p className="text-sm font-medium mb-2">{t('assignedUsers')}</p>
                                             <div className="flex flex-wrap gap-2">
                                                 {shift.assignedCashierIds.map(id => {
                                                     const user = users.find(c => c.id === id);
@@ -626,22 +629,22 @@ export default function SettingsPage() {
                     <Dialog open={!!editingTariff} onOpenChange={(open) => !open && setEditingTariff(null)}>
                         <DialogContent>
                             <DialogHeader>
-                                <DialogTitle>Edit Tariff</DialogTitle>
+                                <DialogTitle>{t('editTariff')}</DialogTitle>
                                 <DialogDescription>
-                                    Update the details for the tariff.
+                                    {t('editTariffDescription')}
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="edit-tariff-name" className="text-right">Name</Label>
+                                    <Label htmlFor="edit-tariff-name" className="text-right">{t('gateName')}</Label>
                                     <Input id="edit-tariff-name" value={editingTariff.name} onChange={(e) => handleTariffChange('name', e.target.value)} className="col-span-3" />
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="edit-tariff-desc" className="text-right">Description</Label>
+                                    <Label htmlFor="edit-tariff-desc" className="text-right">{t('description')}</Label>
                                     <Textarea id="edit-tariff-desc" value={editingTariff.description} onChange={(e) => handleTariffChange('description', e.target.value)} className="col-span-3" />
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="edit-tariff-rate" className="text-right">Rate</Label>
+                                    <Label htmlFor="edit-tariff-rate" className="text-right">{t('rate')}</Label>
                                     <Input id="edit-tariff-rate" value={editingTariff.rate} onChange={(e) => handleTariffChange('rate', e.target.value)} className="col-span-3" />
                                 </div>
                             </div>
@@ -650,7 +653,7 @@ export default function SettingsPage() {
                                     <Button variant="outline" onClick={() => setEditingTariff(null)}>Cancel</Button>
                                 </DialogClose>
                                 <DialogClose asChild>
-                                    <Button type="button" onClick={handleUpdateTariff}>Save Changes</Button>
+                                    <Button type="button" onClick={handleUpdateTariff}>{t('saveChanges')}</Button>
                                 </DialogClose>
                             </DialogFooter>
                         </DialogContent>
@@ -660,26 +663,26 @@ export default function SettingsPage() {
                     <Dialog open={!!editingShift} onOpenChange={(open) => !open && setEditingShift(null)}>
                         <DialogContent>
                             <DialogHeader>
-                                <DialogTitle>Edit Shift</DialogTitle>
+                                <DialogTitle>{t('editShift')}</DialogTitle>
                                 <DialogDescription>
-                                    Update the details for the shift.
+                                    {t('editShiftDescription')}
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="edit-shift-name" className="text-right">Shift Name</Label>
+                                    <Label htmlFor="edit-shift-name" className="text-right">{t('shiftName')}</Label>
                                     <Input id="edit-shift-name" value={editingShift.name} onChange={(e) => setEditingShift({...editingShift, name: e.target.value})} className="col-span-3" />
                                 </div>
                                  <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="edit-shift-start" className="text-right">Start Time</Label>
+                                    <Label htmlFor="edit-shift-start" className="text-right">{t('startTime')}</Label>
                                     <Input id="edit-shift-start" type="time" value={editingShift.startTime} onChange={(e) => setEditingShift({...editingShift, startTime: e.target.value})} className="col-span-3" />
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="edit-shift-end" className="text-right">End Time</Label>
+                                    <Label htmlFor="edit-shift-end" className="text-right">{t('endTime')}</Label>
                                     <Input id="edit-shift-end" type="time" value={editingShift.endTime} onChange={(e) => setEditingShift({...editingShift, endTime: e.target.value})} className="col-span-3" />
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="edit-shift-cashiers" className="text-right">Assigned Users</Label>
+                                    <Label htmlFor="edit-shift-cashiers" className="text-right">{t('assignedUsers')}</Label>
                                     <Combobox
                                         className="col-span-3"
                                         options={users.map(c => ({ value: c.id.toString(), label: c.name }))}
@@ -697,7 +700,7 @@ export default function SettingsPage() {
                                 <DialogClose asChild>
                                     <Button variant="outline" onClick={() => setEditingShift(null)}>Cancel</Button>
                                 </DialogClose>
-                                <Button type="button" onClick={() => handleUpdateShift(editingShift)}>Save Changes</Button>
+                                <Button type="button" onClick={() => handleUpdateShift(editingShift)}>{t('saveChanges')}</Button>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
@@ -705,14 +708,14 @@ export default function SettingsPage() {
                 <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>{editingUser ? "Edit User" : "Add New User"}</DialogTitle>
+                            <DialogTitle>{editingUser ? t('editUser') : t('addNewUser')}</DialogTitle>
                             <DialogDescription>
-                                Manage user details, roles, and gate assignments.
+                                {t('editUserDescription')}
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                              <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="user-name" className="text-right">Name</Label>
+                                <Label htmlFor="user-name" className="text-right">{t('gateName')}</Label>
                                 <Input id="user-name" value={userForm.name} onChange={(e) => handleUserFormChange('name', e.target.value)} className="col-span-3" />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
@@ -720,11 +723,11 @@ export default function SettingsPage() {
                                 <Input id="user-email" type="email" value={userForm.email} onChange={(e) => handleUserFormChange('email', e.target.value)} className="col-span-3" />
                             </div>
                              <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="user-password" className="text-right">Password</Label>
-                                <Button variant="outline" className="col-span-3" onClick={() => toast({ title: "Password Management", description: "In a real app, this would open a secure password reset flow."})}>Set Password</Button>
+                                <Label htmlFor="user-password" className="text-right">{t('password')}</Label>
+                                <Button variant="outline" className="col-span-3" onClick={() => toast({ title: t('passwordManagement'), description: t('passwordManagementDescription')})}>{t('setPassword')}</Button>
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="user-role" className="text-right">Role</Label>
+                                <Label htmlFor="user-role" className="text-right">{t('role')}</Label>
                                  <Select value={userForm.role} onValueChange={(value: UserData['role']) => handleUserFormChange('role', value)}>
                                     <SelectTrigger className="col-span-3">
                                         <SelectValue />
@@ -738,17 +741,17 @@ export default function SettingsPage() {
                                 </Select>
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="user-gate" className="text-right">Assign Gate</Label>
+                                <Label htmlFor="user-gate" className="text-right">{t('assignGate')}</Label>
                                 <Select 
                                     value={userForm.assignedGateId?.toString() ?? 'none'} 
                                     onValueChange={(value) => handleUserFormChange('assignedGateId', value === 'none' ? null : parseInt(value))}
                                     disabled={userForm.role !== 'cashier' && userForm.role !== 'operator'}
                                 >
                                     <SelectTrigger className="col-span-3">
-                                        <SelectValue placeholder="Select a gate" />
+                                        <SelectValue placeholder={t('selectGate')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="none">None</SelectItem>
+                                        <SelectItem value="none">{t('none')}</SelectItem>
                                         {(userForm.role === 'cashier' ? gates.filter(g => g.name.toLowerCase().includes('exit')) : gates.filter(g => g.name.toLowerCase().includes('entry'))).map(gate => (
                                             <SelectItem key={gate.id} value={gate.id.toString()}>{gate.name}</SelectItem>
                                         ))}
@@ -758,7 +761,7 @@ export default function SettingsPage() {
                         </div>
                         <DialogFooter>
                             <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-                            <Button onClick={handleSaveUser}>Save Changes</Button>
+                            <Button onClick={handleSaveUser}>{t('saveChanges')}</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

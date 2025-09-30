@@ -45,6 +45,8 @@ import { Users, PlusCircle, Edit, Mail, Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { sendParkerNotification } from '@/app/actions';
 import { Textarea } from '@/components/ui/textarea';
+import { useTranslations } from 'next-intl';
+
 
 type Parker = {
   id: number;
@@ -81,6 +83,7 @@ const initialFormState = {
 };
 
 export default function ParkersPage() {
+  const t = useTranslations('Parkers');
   const { toast } = useToast();
   const [parkers, setParkers] = useState<Parker[]>(mockParkers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -119,8 +122,8 @@ export default function ParkersPage() {
     if (!parkerForm.name || !parkerForm.plate || !parkerForm.email) {
         toast({
             variant: "destructive",
-            title: "Validation Error",
-            description: "Name, License Plate, and Email cannot be empty.",
+            title: t('validationError'),
+            description: t('validationMessage'),
         });
         return;
     }
@@ -129,8 +132,8 @@ export default function ParkersPage() {
         // Update existing parker
         setParkers(parkers.map(p => p.id === editingParker.id ? { ...editingParker, ...parkerForm } : p));
         toast({
-            title: "Parker Updated",
-            description: `Details for ${parkerForm.name} have been updated.`,
+            title: t('updated'),
+            description: t('updatedMessage', {name: parkerForm.name}),
         });
     } else {
         // Add new parker
@@ -140,8 +143,8 @@ export default function ParkersPage() {
         };
         setParkers([...parkers, newParker]);
         toast({
-            title: "Parker Added",
-            description: `${parkerForm.name} has been added to the system.`,
+            title: t('added'),
+            description: t('addedMessage', {name: parkerForm.name}),
         });
     }
     setIsDialogOpen(false);
@@ -164,12 +167,12 @@ export default function ParkersPage() {
     if (error) {
         toast({
             variant: "destructive",
-            title: "Notification Failed",
+            title: t('notifyFailed'),
             description: error,
         });
     } else if (data) {
         toast({
-            title: `Email Generated for ${parker.name}`,
+            title: t('emailGenerated', {name: parker.name}),
             description: (
                 <div className="w-full">
                     <p className="font-semibold">{data.subject}</p>
@@ -184,89 +187,89 @@ export default function ParkersPage() {
 
   return (
     <div className="flex flex-col h-full">
-        <Header title="Parker Management" />
+        <Header title={t('title')} />
         <main className="flex-1 p-4 md:p-6 lg:p-8">
             <Card>
                 <CardHeader>
                     <div className="flex flex-wrap gap-4 justify-between items-center">
                         <div>
-                            <CardTitle>Registered Parkers</CardTitle>
-                            <CardDescription>Manage long-term subscribers and their access credentials.</CardDescription>
+                            <CardTitle>{t('title')}</CardTitle>
+                            <CardDescription>{t('description')}</CardDescription>
                         </div>
                         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                             <DialogTrigger asChild>
-                                <Button onClick={handleAddNewClick}><PlusCircle className="mr-2" /> Add New Parker</Button>
+                                <Button onClick={handleAddNewClick}><PlusCircle className="mr-2" /> {t('addNew')}</Button>
                             </DialogTrigger>
                             <DialogContent className="max-h-[90vh] overflow-y-auto">
                                 <DialogHeader>
-                                    <DialogTitle>{editingParker ? "Edit Parker" : "Add New Parker"}</DialogTitle>
+                                    <DialogTitle>{editingParker ? t('editTitle') : t('addTitle')}</DialogTitle>
                                     <DialogDescription>
-                                        Fill in the details below to register a new long-term parker.
+                                        {t('formDescription')}
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div className="grid gap-4 py-4">
                                     <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="name" className="text-right">Name</Label>
+                                        <Label htmlFor="name" className="text-right">{t('name')}</Label>
                                         <Input id="name" value={parkerForm.name} onChange={(e) => handleFormChange('name', e.target.value)} className="col-span-3" />
                                     </div>
                                     <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="email" className="text-right">Email</Label>
+                                        <Label htmlFor="email" className="text-right">{t('email')}</Label>
                                         <Input id="email" type="email" value={parkerForm.email} onChange={(e) => handleFormChange('email', e.target.value)} className="col-span-3" />
                                     </div>
                                      <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="tel" className="text-right">Telephone</Label>
+                                        <Label htmlFor="tel" className="text-right">{t('telephone')}</Label>
                                         <Input id="tel" type="tel" value={parkerForm.tel} onChange={(e) => handleFormChange('tel', e.target.value)} className="col-span-3" />
                                     </div>
                                     <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="dob" className="text-right">Date of Birth</Label>
+                                        <Label htmlFor="dob" className="text-right">{t('dob')}</Label>
                                         <Input id="dob" type="date" value={parkerForm.dob} onChange={(e) => handleFormChange('dob', e.target.value)} className="col-span-3" />
                                     </div>
                                     <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="plate" className="text-right">License Plate</Label>
+                                        <Label htmlFor="plate" className="text-right">{t('plate')}</Label>
                                         <Input id="plate" value={parkerForm.plate} onChange={(e) => handleFormChange('plate', e.target.value)} className="col-span-3" />
                                     </div>
                                     <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="carModel" className="text-right">Car Model</Label>
+                                        <Label htmlFor="carModel" className="text-right">{t('carModel')}</Label>
                                         <Input id="carModel" value={parkerForm.carModel} onChange={(e) => handleFormChange('carModel', e.target.value)} className="col-span-3" />
                                     </div>
                                      <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="type" className="text-right">Parker Type</Label>
+                                        <Label htmlFor="type" className="text-right">{t('type')}</Label>
                                         <Select value={parkerForm.type} onValueChange={(value: Parker['type']) => handleFormChange('type', value)}>
                                             <SelectTrigger className="col-span-3">
-                                                <SelectValue placeholder="Select type" />
+                                                <SelectValue placeholder={t('selectType')} />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {parkerTypeOptions.map(opt => (
                                                     <SelectItem key={opt} value={opt}>
-                                                        {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                                                        {t(`types.${opt}` as const)}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
                                     <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="participation" className="text-right">Participation</Label>
+                                        <Label htmlFor="participation" className="text-right">{t('participation')}</Label>
                                         <Select value={parkerForm.participation} onValueChange={(value: Parker['participation']) => handleFormChange('participation', value)}>
                                             <SelectTrigger className="col-span-3">
-                                                <SelectValue placeholder="Select type" />
+                                                <SelectValue placeholder={t('selectType')} />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {participationOptions.map(opt => (
                                                     <SelectItem key={opt} value={opt}>
-                                                        {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                                                        {t(`participations.${opt}` as const)}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
                                     <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="accessId" className="text-right">Access ID</Label>
-                                        <Input id="accessId" value={parkerForm.accessId} onChange={(e) => handleFormChange('accessId', e.target.value)} className="col-span-3" placeholder="e.g., RFID Card Number" />
+                                        <Label htmlFor="accessId" className="text-right">{t('accessId')}</Label>
+                                        <Input id="accessId" value={parkerForm.accessId} onChange={(e) => handleFormChange('accessId', e.target.value)} className="col-span-3" placeholder={t('accessIdPlaceholder')} />
                                     </div>
                                 </div>
                                 <DialogFooter>
-                                    <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-                                    <Button onClick={handleSaveChanges}>Save Changes</Button>
+                                    <DialogClose asChild><Button variant="outline">{t('cancel')}</Button></DialogClose>
+                                    <Button onClick={handleSaveChanges}>{t('save')}</Button>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
@@ -277,14 +280,14 @@ export default function ParkersPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Email</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead>License Plate</TableHead>
-                                    <TableHead>Car Model</TableHead>
-                                    <TableHead>Participation</TableHead>
-                                    <TableHead>Access ID</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
+                                    <TableHead>{t('name')}</TableHead>
+                                    <TableHead>{t('email')}</TableHead>
+                                    <TableHead>{t('type')}</TableHead>
+                                    <TableHead>{t('plate')}</TableHead>
+                                    <TableHead>{t('carModel')}</TableHead>
+                                    <TableHead>{t('participation')}</TableHead>
+                                    <TableHead>{t('accessId')}</TableHead>
+                                    <TableHead className="text-right">{t('actions')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -293,12 +296,12 @@ export default function ParkersPage() {
                                         <TableCell className="font-medium">{parker.name}</TableCell>
                                         <TableCell>{parker.email}</TableCell>
                                         <TableCell>
-                                             <Badge variant="outline">{parker.type.charAt(0).toUpperCase() + parker.type.slice(1)}</Badge>
+                                             <Badge variant="outline">{t(`types.${parker.type}` as const)}</Badge>
                                         </TableCell>
                                         <TableCell>{parker.plate}</TableCell>
                                         <TableCell>{parker.carModel}</TableCell>
                                         <TableCell>
-                                            <Badge variant="secondary">{parker.participation.charAt(0).toUpperCase() + parker.participation.slice(1)}</Badge>
+                                            <Badge variant="secondary">{t(`participations.${parker.participation}` as const)}</Badge>
                                         </TableCell>
                                         <TableCell>{parker.accessId}</TableCell>
                                         <TableCell className="text-right">

@@ -28,6 +28,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { mockGates, mockCashiers, initialMockTickets, initialMockTransactions, mockParkers } from "@/lib/mock-data";
+import { useTranslations } from "next-intl";
 
 
 // In a real app, this tariff configuration would be fetched from a database via an API call
@@ -76,6 +77,7 @@ const calculateFee = (durationMinutes: number, parkerType?: string, isLostTicket
 
 
 export default function CashierPage() {
+    const t = useTranslations('Cashier');
     const { toast } = useToast();
     const [ticketId, setTicketId] = useState("");
     const [activeTicket, setActiveTicket] = useState<any>(null);
@@ -120,8 +122,8 @@ export default function CashierPage() {
             setActiveTicket(lostTicket);
              toast({
                 variant: "destructive",
-                title: "Lost Ticket",
-                description: `Applying lost ticket fee of $${tariffConfig.lostTicket.toFixed(2)}.`,
+                title: t('lostTicket'),
+                description: t('lostTicketDescription', {fee: tariffConfig.lostTicket.toFixed(2)}),
             });
             return;
         }
@@ -141,8 +143,8 @@ export default function CashierPage() {
             };
             setActiveTicket(parkerTicket);
             toast({
-                title: `Registered Parker Found`,
-                description: `Displaying details for ${foundParker.name}.`,
+                title: t('parkerFound'),
+                description: t('parkerFoundDescription', {name: foundParker.name}),
             });
             return;
         }
@@ -152,14 +154,14 @@ export default function CashierPage() {
         if (foundTicket) {
             setActiveTicket(foundTicket);
             toast({
-                title: "Ticket Found",
-                description: `Displaying details for ticket ${foundTicket.id}.`,
+                title: t('ticketFound'),
+                description: t('ticketFoundDescription', {id: foundTicket.id}),
             });
         } else {
             toast({
                 variant: "destructive",
-                title: "Ticket or Parker Not Found",
-                description: "No active ticket or registered parker found with that ID/Plate.",
+                title: t('ticketNotFound'),
+                description: t('ticketNotFoundDescription'),
             });
         }
     };
@@ -179,8 +181,8 @@ export default function CashierPage() {
         setPaymentProcessed(true);
 
         toast({
-            title: "Payment Confirmed",
-            description: `Payment of $${fee.toFixed(2)} received for ticket ${activeTicket.id}.`,
+            title: t('paymentConfirmed'),
+            description: t('paymentConfirmedDescription', {fee: fee.toFixed(2), id: activeTicket.id}),
             className: "bg-green-100 text-green-800"
         });
     }
@@ -196,8 +198,8 @@ export default function CashierPage() {
 
             if (currentBalance / totalDue >= 0.8) {
                 toast({
-                    title: "Automated Notification Sent",
-                    description: `Sending a balance reminder to ${parker.name}.`,
+                    title: t('automatedNotification'),
+                    description: t('automatedNotificationDescription', {name: parker.name}),
                 });
 
                 await sendParkerNotification({
@@ -212,15 +214,15 @@ export default function CashierPage() {
 
     const handleOpenGate = async () => {
         if (!activeCashier) {
-             toast({ variant: "destructive", title: "No Cashier Selected", description: "Please select a cashier station." });
+             toast({ variant: "destructive", title: t('noCashier'), description: t('noCashierDescription') });
              return;
         }
         if (!assignedGate) {
-             toast({ variant: "destructive", title: "No Gate Assigned", description: `Cashier ${activeCashier.name} is not assigned to an exit gate.` });
+             toast({ variant: "destructive", title: t('noGateAssigned'), description: t('noGateAssignedDescription', {name: activeCashier.name}) });
              return;
         }
         if (!paymentProcessed && fee > 0) {
-            toast({ variant: "destructive", title: "Payment Required", description: "Payment must be processed before opening the gate." });
+            toast({ variant: "destructive", title: t('paymentRequired'), description: t('paymentRequiredDescription') });
             return;
         }
 
@@ -234,8 +236,8 @@ export default function CashierPage() {
         
         if (success) {
             toast({
-                title: `Opening ${assignedGate.name}`,
-                description: "Exit gate opening command sent.",
+                title: t('openingGate', {gateName: assignedGate.name}),
+                description: t('openingGateDescription'),
             });
 
             // Check if we need to send an automated notification for registered parkers
@@ -256,7 +258,7 @@ export default function CashierPage() {
         } else {
              toast({
                 variant: "destructive",
-                title: "Gate Action Failed",
+                title: t('gateActionFailed'),
                 description: message,
             });
         }
@@ -267,22 +269,22 @@ export default function CashierPage() {
 
         const parkerType = type.charAt(0).toUpperCase() + type.slice(1);
         if (tariffConfig.freeParkingTypes.includes(type)) {
-            return <Badge className="w-fit bg-green-100 text-green-800">{parkerType} (No Fee)</Badge>;
+            return <Badge className="w-fit bg-green-100 text-green-800">{parkerType} {t('noFee')}</Badge>;
         }
-        return <Badge className="w-fit">{parkerType} Parker</Badge>;
+        return <Badge className="w-fit">{t('parkerType', {type: parkerType})}</Badge>;
     };
 
     return (
         <div className="flex flex-col h-full">
-            <Header title="Cashier Station" />
+            <Header title={t('title')} />
             <main className="flex-1 p-4 md:p-6 lg:p-8 grid gap-8 md:grid-cols-3">
                 <div className="md:col-span-2">
                     <Card>
                         <CardHeader>
                             <div className="flex items-start justify-between">
                                 <div>
-                                    <CardTitle>Exit Processing</CardTitle>
-                                    <CardDescription>Scan ticket, calculate fees, and process payment.</CardDescription>
+                                    <CardTitle>{t('exitProcessing')}</CardTitle>
+                                    <CardDescription>{t('exitProcessingDescription')}</CardDescription>
                                 </div>
                                 <div className="flex items-center gap-4">
                                      <div className="w-[200px]">
@@ -290,16 +292,16 @@ export default function CashierPage() {
                                             <SelectTrigger>
                                                 <div className="flex items-center gap-2">
                                                     <MonitorSpeaker className="size-4 text-muted-foreground" />
-                                                    <SelectValue placeholder="Select Station" />
+                                                    <SelectValue placeholder={t('selectStation')} />
                                                 </div>
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {mockCashiers.filter(c => c.role === 'cashier').map(c => (
-                                                    <SelectItem key={c.id} value={c.id.toString()}>{c.name}'s Station</SelectItem>
+                                                    <SelectItem key={c.id} value={c.id.toString()}>{t('station', {name: c.name})}</SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                        {assignedGate && <p className="text-xs text-muted-foreground mt-1">Controls: <span className="font-semibold">{assignedGate.name}</span></p>}
+                                        {assignedGate && <p className="text-xs text-muted-foreground mt-1">{t('controls', {gateName: assignedGate.name})}</p>}
                                     </div>
                                     <QrCode className="h-8 w-8 text-primary" />
                                 </div>
@@ -309,12 +311,12 @@ export default function CashierPage() {
                             <div className="flex w-full max-w-sm items-center space-x-2">
                                 <Input 
                                     type="text" 
-                                    placeholder="Ticket ID, Plate, Access ID or 'lost'" 
+                                    placeholder={t('ticketInputPlaceholder')} 
                                     value={ticketId} 
                                     onChange={(e) => setTicketId(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && handleFindTicket()}
                                 />
-                                <Button onClick={handleFindTicket}>Find Ticket</Button>
+                                <Button onClick={handleFindTicket}>{t('findTicket')}</Button>
                             </div>
                             
                             <Separator />
@@ -326,14 +328,14 @@ export default function CashierPage() {
                                             <div className="flex items-center gap-2">
                                                 <Ticket className="size-5 text-muted-foreground" />
                                                 <div>
-                                                    <p className="text-muted-foreground">Ticket ID</p>
+                                                    <p className="text-muted-foreground">{t('ticketId')}</p>
                                                     <p className="font-semibold">{activeTicket.id}</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <Car className="size-5 text-muted-foreground" />
                                                 <div>
-                                                    <p className="text-muted-foreground">License Plate</p>
+                                                    <p className="text-muted-foreground">{t('licensePlate')}</p>
                                                     <p className="font-semibold">{activeTicket.plate}</p>
                                                 </div>
                                             </div>
@@ -341,7 +343,7 @@ export default function CashierPage() {
                                                 <div className="flex items-center gap-2 col-span-2">
                                                     <Clock className="size-5 text-muted-foreground" />
                                                     <div>
-                                                        <p className="text-muted-foreground">Entry Time</p>
+                                                        <p className="text-muted-foreground">{t('entryTime')}</p>
                                                         <p className="font-semibold">{activeTicket.entryTime.toLocaleString()}</p>
                                                     </div>
                                                 </div>
@@ -352,11 +354,11 @@ export default function CashierPage() {
                                         <Card className="mt-4 bg-muted/50">
                                             <CardContent className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
                                                 <div className="flex flex-col items-center justify-center space-y-1">
-                                                    <p className="text-lg text-muted-foreground">Duration</p>
+                                                    <p className="text-lg text-muted-foreground">{t('duration')}</p>
                                                     <p className="text-4xl font-bold">{String(duration.hours).padStart(2, '0')}:{String(duration.minutes).padStart(2, '0')}</p>
                                                 </div>
                                                 <div className="flex flex-col items-center justify-center space-y-1">
-                                                    <p className="text-lg text-muted-foreground">Total Fee</p>
+                                                    <p className="text-lg text-muted-foreground">{t('totalFee')}</p>
                                                     <p className="text-4xl font-bold text-primary">${fee.toFixed(2)}</p>
                                                 </div>
                                             </CardContent>
@@ -364,12 +366,12 @@ export default function CashierPage() {
                                         {paymentProcessed && (
                                             <div className="mt-4 flex items-center justify-center gap-2 text-green-600">
                                                 <CheckCircle className="size-5" />
-                                                <p className="font-semibold">Payment confirmed. Ready to open gate.</p>
+                                                <p className="font-semibold">{t('paymentConfirmedReady')}</p>
                                             </div>
                                         )}
                                     </div>
                                      <div className="flex flex-col gap-2">
-                                        <Label>Entry Snapshot</Label>
+                                        <Label>{t('entrySnapshot')}</Label>
                                         <div className="aspect-video w-full bg-muted rounded-md overflow-hidden relative">
                                              {activeTicket && activeTicket.id !== 'LOST TICKET' ? (
                                                 <Image
@@ -381,7 +383,7 @@ export default function CashierPage() {
                                                 />
                                             ) : (
                                                 <div className="flex items-center justify-center h-full text-muted-foreground">
-                                                    <p>No snapshot available.</p>
+                                                    <p>{t('noSnapshot')}</p>
                                                 </div>
                                             )}
                                         </div>
@@ -390,7 +392,7 @@ export default function CashierPage() {
                             ) : (
                                 <div className="flex flex-col items-center justify-center h-64 text-center">
                                     <Ticket className="size-16 text-muted-foreground/50" />
-                                    <p className="mt-4 text-muted-foreground">Scan a ticket to begin processing an exit.</p>
+                                    <p className="mt-4 text-muted-foreground">{t('scanToBegin')}</p>
                                 </div>
                             )}
                         </CardContent>
@@ -398,38 +400,38 @@ export default function CashierPage() {
                              <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                     <Button variant="outline" disabled={!activeTicket || paymentProcessed || fee <= 0}>
-                                        <DollarSign className="mr-2"/> Process Payment
+                                        <DollarSign className="mr-2"/> {t('processPayment')}
                                     </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
-                                    <AlertDialogTitle>Confirm Payment</AlertDialogTitle>
+                                    <AlertDialogTitle>{t('confirmPayment')}</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                        You are about to process a cash payment of ${fee.toFixed(2)} for ticket {activeTicket?.id}.
+                                        {t('confirmPaymentDescription', {fee: fee.toFixed(2), id: activeTicket?.id})}
                                     </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleProcessPayment}>Confirm Payment</AlertDialogAction>
+                                    <AlertDialogAction onClick={handleProcessPayment}>{t('confirm')}</AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
-                            <Button onClick={handleOpenGate} disabled={!activeTicket || (!paymentProcessed && fee > 0)}>Open {assignedGate?.name || 'Exit Gate'}</Button>
+                            <Button onClick={handleOpenGate} disabled={!activeTicket || (!paymentProcessed && fee > 0)}>{t('openGate', {gateName: assignedGate?.name || 'Exit Gate'})}</Button>
                         </CardFooter>
                     </Card>
                 </div>
                 <div className="md:col-span-1">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Recent Exits (This Terminal)</CardTitle>
+                            <CardTitle>{t('recentExits')}</CardTitle>
                         </CardHeader>
                         <CardContent>
                              <Table>
                                 <TableHeader>
                                     <TableRow>
-                                    <TableHead>Ticket</TableHead>
-                                    <TableHead>Amount</TableHead>
-                                    <TableHead>Status</TableHead>
+                                    <TableHead>{t('ticketId')}</TableHead>
+                                    <TableHead>{t('amount')}</TableHead>
+                                    <TableHead>{t('status')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>

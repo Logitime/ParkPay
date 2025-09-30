@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { ParkingSquare } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 const zones = [
   { name: 'Zone A - Surface', available: 25, total: 100 },
@@ -17,13 +18,14 @@ const zones = [
 ];
 
 export function ZoneStatus() {
+  const t = useTranslations('Dashboard');
   return (
     <Card className="lg:col-span-1">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div>
-            <CardTitle>Zone Status</CardTitle>
-            <CardDescription>Live occupancy across all zones.</CardDescription>
+            <CardTitle>{t('zoneStatus')}</CardTitle>
+            <CardDescription>{t('zoneStatusDescription')}</CardDescription>
           </div>
           <ParkingSquare className="h-8 w-8 text-primary" />
         </div>
@@ -39,7 +41,7 @@ export function ZoneStatus() {
                   <span className="font-semibold text-foreground">
                     {zone.available}
                   </span>
-                  /{zone.total} available
+                  /{zone.total} {t('available')}
                 </p>
               </div>
               <Progress value={occupancy} className="h-2" />

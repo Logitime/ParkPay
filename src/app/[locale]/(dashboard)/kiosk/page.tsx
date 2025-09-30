@@ -13,6 +13,8 @@ import { cn } from '@/lib/utils';
 import { mockParkers } from '@/lib/mock-data';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTranslations } from 'next-intl';
+
 
 type KioskMode = 'entry' | 'exit';
 type EntryState = 'idle' | 'car_present' | 'issuing_ticket' | 'ticket_issued';
@@ -35,6 +37,7 @@ type GeneratedTicket = {
 };
 
 export default function KioskPage() {
+    const t = useTranslations('Kiosk');
     const [mode, setMode] = useState<KioskMode>('entry');
     const [entryState, setEntryState] = useState<EntryState>('idle');
     const [exitState, setExitState] = useState<ExitState>('idle');
@@ -101,12 +104,12 @@ export default function KioskPage() {
             case 'car_present':
                 return (
                     <div className="text-center">
-                        <h2 className="text-5xl font-bold mb-8">Welcome!</h2>
+                        <h2 className="text-5xl font-bold mb-8">{t('welcome')}</h2>
                         <Button 
                             className="w-full h-32 text-2xl bg-green-500 hover:bg-green-600 text-white animate-blink"
                             onClick={handleIssueTicket}
                         >
-                            <Ticket className="mr-4 size-10" /> Press to Issue Ticket
+                            <Ticket className="mr-4 size-10" /> {t('issueTicket')}
                         </Button>
                     </div>
                 );
@@ -114,16 +117,16 @@ export default function KioskPage() {
                 return (
                      <div className="text-center flex flex-col items-center">
                         <Loader2 className="size-16 animate-spin text-primary mb-4" />
-                        <h2 className="text-3xl font-semibold">Printing your ticket...</h2>
-                        <p className="text-muted-foreground">Please wait a moment.</p>
+                        <h2 className="text-3xl font-semibold">{t('printingTicket')}</h2>
+                        <p className="text-muted-foreground">{t('pleaseWait')}</p>
                     </div>
                 );
             case 'ticket_issued':
                 if (!generatedTicket) return null;
                 return (
                     <div className="text-center">
-                        <h2 className="text-3xl font-bold mb-4">Welcome to ParkPay</h2>
-                        <p className="text-lg mb-4">Please take your ticket and proceed.</p>
+                        <h2 className="text-3xl font-bold mb-4">{t('welcomeToParkPay')}</h2>
+                        <p className="text-lg mb-4">{t('takeTicket')}</p>
                         
                         <Card className="text-left p-4 bg-gray-50 dark:bg-gray-800">
                              {qrCodeUrl && <Image src={qrCodeUrl} alt="QR Code" width={128} height={128} className="mx-auto my-2" />}
@@ -138,8 +141,8 @@ export default function KioskPage() {
                          
                         <Card className="mt-4 bg-blue-50 border-blue-200">
                             <CardContent className="p-4 text-blue-800">
-                                <p className="font-semibold text-sm">Note: After 1 hour, rate is $4.00 for the next 3 hours.</p>
-                                <p className="text-xs mt-1">Please keep your ticket safe. You will need it to exit.</p>
+                                <p className="font-semibold text-sm">{t('note')}</p>
+                                <p className="text-xs mt-1">{t('keepTicket')}</p>
                             </CardContent>
                         </Card>
                     </div>
@@ -149,7 +152,7 @@ export default function KioskPage() {
                 return (
                     <div className="text-center">
                         <ParkingCircle className="size-24 mx-auto text-muted-foreground/30 mb-4" />
-                        <h2 className="text-3xl text-muted-foreground/50">Please drive forward to the gate.</h2>
+                        <h2 className="text-3xl text-muted-foreground/50">{t('driveForward')}</h2>
                     </div>
                 );
         }
@@ -160,8 +163,8 @@ export default function KioskPage() {
             case 'scanning':
                 return (
                     <div className="text-center">
-                        <h2 className="text-4xl font-bold mb-6">Please Scan Your Ticket</h2>
-                        <p className="text-lg text-muted-foreground mb-8">Hold your ticket QR code or access card up to the scanner.</p>
+                        <h2 className="text-4xl font-bold mb-6">{t('scanTicket')}</h2>
+                        <p className="text-lg text-muted-foreground mb-8">{t('scanDescription')}</p>
                         <Progress value={progress} className="w-full h-4" />
                     </div>
                 );
@@ -169,7 +172,7 @@ export default function KioskPage() {
                 return (
                     <div className="grid md:grid-cols-2 gap-8 items-center">
                         <div className="text-center md:text-left">
-                            <h2 className="text-3xl font-semibold mb-2">Parking Fee Due</h2>
+                            <h2 className="text-3xl font-semibold mb-2">{t('feeDue')}</h2>
                             <p className="text-8xl font-bold text-primary mb-6">$13.50</p>
                             <div className="grid grid-cols-2 gap-4 text-left">
                                 <div className="flex items-center gap-2"><Car className="size-5 text-muted-foreground" /> <span>{visitorTicket.plate}</span></div>
@@ -177,7 +180,7 @@ export default function KioskPage() {
                             </div>
                             <Card className="mt-6 bg-yellow-50 border-yellow-200">
                                 <CardContent className="p-4">
-                                    <p className="font-semibold text-yellow-800">Please complete payment at the cashier station or use the payment machine.</p>
+                                    <p className="font-semibold text-yellow-800">{t('paymentInstruction')}</p>
                                 </CardContent>
                             </Card>
                         </div>
@@ -199,20 +202,20 @@ export default function KioskPage() {
                  if (!parkerInfo) return null;
                 return (
                      <div className="text-center">
-                        <h2 className="text-3xl font-semibold mb-4">Welcome Back, {parkerInfo.name}!</h2>
+                        <h2 className="text-3xl font-semibold mb-4">{t('welcomeBack', {name: parkerInfo.name})}</h2>
                          <div className="grid grid-cols-2 gap-6 my-8">
                              <div className="p-4 rounded-lg bg-muted">
-                                <p className="text-sm text-muted-foreground">Participation</p>
+                                <p className="text-sm text-muted-foreground">{t('participation')}</p>
                                 <p className="text-2xl font-bold capitalize">{parkerInfo.participation}</p>
                             </div>
                             <div className="p-4 rounded-lg bg-muted">
-                                <p className="text-sm text-muted-foreground">Next Payment Due</p>
+                                <p className="text-sm text-muted-foreground">{t('nextPaymentDue')}</p>
                                 <p className="text-2xl font-bold">Aug 15, 2024</p>
                             </div>
                          </div>
                          <Card className="bg-green-50 border-green-200">
                             <CardContent className="p-4">
-                                <p className="font-semibold text-green-800">Your account is in good standing.</p>
+                                <p className="font-semibold text-green-800">{t('goodStanding')}</p>
                             </CardContent>
                         </Card>
                     </div>
@@ -221,8 +224,8 @@ export default function KioskPage() {
                 return (
                     <div className="text-center flex flex-col items-center">
                         <Smile className="size-20 text-primary mb-4" />
-                        <h2 className="text-5xl font-bold mb-2">Thank You!</h2>
-                        <p className="text-2xl text-muted-foreground">Drive safely. Goodbye and good luck!</p>
+                        <h2 className="text-5xl font-bold mb-2">{t('thankYou')}</h2>
+                        <p className="text-2xl text-muted-foreground">{t('driveSafely')}</p>
                     </div>
                 );
             case 'idle':
@@ -230,7 +233,7 @@ export default function KioskPage() {
                  return (
                     <div className="text-center">
                         <ParkingCircle className="size-24 mx-auto text-muted-foreground/30 mb-4" />
-                        <h2 className="text-3xl text-muted-foreground/50">Welcome to the Exit Gate.</h2>
+                        <h2 className="text-3xl text-muted-foreground/50">{t('welcomeToExit')}</h2>
                     </div>
                 );
         }
@@ -242,7 +245,7 @@ export default function KioskPage() {
              <header className="bg-white dark:bg-gray-800 shadow-md p-4 flex justify-between items-center">
                 <div className="flex items-center gap-2">
                     <ParkingCircle className="size-8 text-primary" />
-                    <h1 className="text-2xl font-bold font-headline">ParkPay Kiosk</h1>
+                    <h1 className="text-2xl font-bold font-headline">{t('title')}</h1>
                 </div>
                 <div className="w-48">
                     <Select value={mode} onValueChange={(v) => setMode(v as KioskMode)}>
@@ -250,8 +253,8 @@ export default function KioskPage() {
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="entry">Entry Gate Display</SelectItem>
-                            <SelectItem value="exit">Exit Gate Display</SelectItem>
+                            <SelectItem value="entry">{t('entryDisplay')}</SelectItem>
+                            <SelectItem value="exit">{t('exitDisplay')}</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

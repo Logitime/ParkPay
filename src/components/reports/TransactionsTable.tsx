@@ -32,6 +32,8 @@ import {
 import { Car, Clock, DollarSign, DoorOpen, User, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
+
 
 const transactions = [
   {
@@ -201,6 +203,7 @@ const DetailRow = ({
 );
 
 function TransactionRow({ transaction }: { transaction: Transaction }) {
+  const t = useTranslations('Reports');
   const dialogContentRef = React.useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -267,37 +270,37 @@ function TransactionRow({ transaction }: { transaction: Transaction }) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Transaction: {transaction.ticketId}</DialogTitle>
+          <DialogTitle>{t('transactionDetails', {ticketId: transaction.ticketId})}</DialogTitle>
         </DialogHeader>
         <div ref={dialogContentRef} className="printable-area space-y-2 py-4">
           <DetailRow
             icon={Car}
-            label="License Plate"
+            label={t('plate')}
             value={transaction.plate}
           />
           <DetailRow
             icon={DoorOpen}
-            label="Entry"
+            label={t('entry')}
             value={`${transaction.entry.date} at ${transaction.entry.time} via ${transaction.entry.gate}`}
           />
            <DetailRow
             icon={DoorOpen}
-            label="Exit"
+            label={t('exit')}
             value={`${transaction.exit.date} at ${transaction.exit.time} via ${transaction.exit.gate}`}
           />
           <DetailRow
             icon={User}
-            label="Cashier"
+            label={t('cashier')}
             value={transaction.exit.user}
           />
           <DetailRow
             icon={Clock}
-            label="Total Parking Time"
+            label={t('totalTime')}
             value={transaction.duration}
           />
            <DetailRow
             icon={DollarSign}
-            label="Final Amount Paid"
+            label={t('finalAmount')}
             value={
               <span className="font-bold text-lg text-primary">
                   {transaction.amount}
@@ -308,10 +311,10 @@ function TransactionRow({ transaction }: { transaction: Transaction }) {
         <DialogFooter className="no-print">
           <Button variant="outline" onClick={handlePrint}>
             <Printer className="mr-2" />
-            Print
+            {t('print')}
           </Button>
           <DialogClose asChild>
-            <Button>Close</Button>
+            <Button>{t('close')}</Button>
           </DialogClose>
         </DialogFooter>
       </DialogContent>
@@ -321,14 +324,14 @@ function TransactionRow({ transaction }: { transaction: Transaction }) {
 
 
 export function TransactionsTable({ filters }: { filters: any }) {
+    const t = useTranslations('Reports');
     // In a real app, you would use the `filters` prop to fetch and display dynamic data.
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Detailed Transactions</CardTitle>
+        <CardTitle>{t('detailedTransactions')}</CardTitle>
         <CardDescription>
-          A detailed log of all transactions within the selected date range.
-          Click a row to see more details.
+          {t('detailedTransactionsDescription')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -336,13 +339,13 @@ export function TransactionsTable({ filters }: { filters: any }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Ticket ID</TableHead>
-                <TableHead>Plate</TableHead>
-                <TableHead>Entry</TableHead>
-                <TableHead>Exit</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
+                <TableHead>{t('ticketId')}</TableHead>
+                <TableHead>{t('plate')}</TableHead>
+                <TableHead>{t('entry')}</TableHead>
+                <TableHead>{t('exit')}</TableHead>
+                <TableHead>{t('duration')}</TableHead>
+                <TableHead>{t('status')}</TableHead>
+                <TableHead className="text-right">{t('amount')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

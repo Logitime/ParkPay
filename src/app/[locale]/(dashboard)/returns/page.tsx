@@ -39,7 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
+import { useTranslations } from 'next-intl';
 
 type Transaction = typeof initialMockTransactions[0];
 type DiscountType = 'none' | 'percentage' | 'fixed';
@@ -55,6 +55,7 @@ const adjustmentReasons = [
 
 
 export default function ReturnsPage() {
+  const t = useTranslations('Returns');
   const { toast } = useToast();
   const [ticketId, setTicketId] = useState('');
   const [foundTransaction, setFoundTransaction] = useState<Transaction | null>(null);
@@ -82,8 +83,8 @@ export default function ReturnsPage() {
       setFinalAmount(null);
       toast({
         variant: "destructive",
-        title: "Transaction Not Found",
-        description: "No paid transaction found with that ID.",
+        title: t('notFound'),
+        description: t('notFoundDescription'),
       });
     }
   };
@@ -95,19 +96,19 @@ export default function ReturnsPage() {
     const value = parseFloat(discountValue);
 
     if (isNaN(value) || value < 0) {
-        toast({ variant: 'destructive', title: 'Invalid Discount', description: 'Please enter a positive number.'});
+        toast({ variant: 'destructive', title: t('invalidDiscount'), description: t('positiveNumber')});
         return;
     }
 
     if (discountType === 'percentage') {
       if (value > 100) {
-          toast({ variant: 'destructive', title: 'Invalid Discount', description: 'Percentage cannot exceed 100.'});
+          toast({ variant: 'destructive', title: t('invalidDiscount'), description: t('percentTooHigh')});
           return;
       }
       newFinalAmount = foundTransaction.amount * (1 - value / 100);
     } else if (discountType === 'fixed') {
        if (value > foundTransaction.amount) {
-          toast({ variant: 'destructive', title: 'Invalid Discount', description: 'Fixed amount cannot exceed original fee.'});
+          toast({ variant: 'destructive', title: t('invalidDiscount'), description: t('fixedTooHigh')});
           return;
       }
       newFinalAmount = foundTransaction.amount - value;
@@ -126,8 +127,8 @@ export default function ReturnsPage() {
     // In a real app, this would update the transaction status in the DB
     // and potentially trigger a refund through a payment provider API.
     toast({
-      title: "Refund Processed",
-      description: `Full refund of $${foundTransaction?.amount.toFixed(2)} issued for ticket ${foundTransaction?.ticketId}. Reason: ${reason}`,
+      title: t('refundProcessed'),
+      description: t('refundProcessedDescription', {amount: foundTransaction?.amount.toFixed(2), ticketId: foundTransaction?.ticketId, reason}),
       className: "bg-blue-100 text-blue-800"
     });
     // Reset state
@@ -146,8 +147,8 @@ export default function ReturnsPage() {
     const refundedAmount = foundTransaction.amount - finalAmount;
     
     toast({
-      title: "Discount Processed",
-      description: `Partial refund of $${refundedAmount.toFixed(2)} issued for reason: ${reason}. New total: $${finalAmount.toFixed(2)}.`,
+      title: t('discountProcessed'),
+      description: t('discountProcessedDescription', {refundedAmount: refundedAmount.toFixed(2), reason, finalAmount: finalAmount.toFixed(2)}),
        className: "bg-green-100 text-green-800"
     });
     // Reset state
@@ -156,26 +157,34 @@ export default function ReturnsPage() {
     setReason('');
   }
 
+  const reasonOptions = {
+    "Customer Complaint": "complaint",
+    "Promotional Offer": "promo",
+    "Service Issue": "issue",
+    "Employee Discount": "employee",
+    "Goodwill Gesture": "goodwill",
+    "Other": "other"
+  };
 
   return (
     <div className="flex flex-col h-full">
-      <Header title="Returns & Discounts" />
+      <Header title={t('title')} />
       <main className="flex-1 p-4 md:p-6 lg:p-8">
         <Card className="max-w-4xl mx-auto">
           <CardHeader>
-            <CardTitle>Post-Payment Adjustments</CardTitle>
-            <CardDescription>Find a completed transaction to issue a discount or a full refund.</CardDescription>
+            <CardTitle>{t('title')}</CardTitle>
+            <CardDescription>{t('description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex w-full max-w-sm items-center space-x-2">
               <Input
                 type="text"
-                placeholder="Enter Paid Ticket ID..."
+                placeholder={t('findPlaceholder')}
                 value={ticketId}
                 onChange={(e) => setTicketId(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleFindTransaction()}
               />
-              <Button onClick={handleFindTransaction}><Search className="mr-2" /> Find Transaction</Button>
+              <Button onClick={handleFindTransaction}><Search className="mr-2" /> {t('find')}</Button>
             </div>
             
             <Separator />
@@ -184,29 +193,29 @@ export default function ReturnsPage() {
               <div className="grid gap-6 md:grid-cols-2">
                 {/* Ticket Details */}
                 <div>
-                  <h3 className="font-semibold text-lg mb-4">Transaction Details</h3>
+                  <h3 className="font-semibold text-lg mb-4">{t('details')}</h3>
                   <div className="space-y-4 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Ticket ID</span>
+                      <span className="text-muted-foreground">{t('ticketId')}</span>
                       <span className="font-medium">{foundTransaction.ticketId}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">License Plate</span>
+                      <span className="text-muted-foreground">{t('plate')}</span>
                       <span className="font-medium">{foundTransaction.plate}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Exit Time</span>
+                      <span className="text-muted-foreground">{t('exitTime')}</span>
                       <span className="font-medium">{foundTransaction.exit}</span>
                     </div>
                      <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">Status</span>
+                      <span className="text-muted-foreground">{t('status')}</span>
                       <Badge variant="default" className={'bg-green-100 text-green-800'}>
                         {foundTransaction.status}
                       </Badge>
                     </div>
                     <Separator />
                     <div className="flex justify-between text-lg">
-                      <span className="font-semibold">Original Amount Paid</span>
+                      <span className="font-semibold">{t('originalAmount')}</span>
                       <span className="font-bold text-primary">${foundTransaction.amount.toFixed(2)}</span>
                     </div>
                   </div>
@@ -214,20 +223,20 @@ export default function ReturnsPage() {
 
                 {/* Discount/Refund Section */}
                 <div>
-                   <h3 className="font-semibold text-lg mb-4">Apply Adjustment</h3>
+                   <h3 className="font-semibold text-lg mb-4">{t('applyAdjustment')}</h3>
                    <div className="space-y-4">
                      <RadioGroup value={discountType} onValueChange={(value: DiscountType) => setDiscountType(value)}>
                        <div className="flex items-center space-x-2">
                          <RadioGroupItem value="none" id="r-none" />
-                         <Label htmlFor="r-none">No Discount</Label>
+                         <Label htmlFor="r-none">{t('noDiscount')}</Label>
                        </div>
                        <div className="flex items-center space-x-2">
                          <RadioGroupItem value="percentage" id="r-percent" />
-                         <Label htmlFor="r-percent">Percentage Discount</Label>
+                         <Label htmlFor="r-percent">{t('percentageDiscount')}</Label>
                        </div>
                        <div className="flex items-center space-x-2">
                          <RadioGroupItem value="fixed" id="r-fixed" />
-                         <Label htmlFor="r-fixed">Fixed Amount Discount</Label>
+                         <Label htmlFor="r-fixed">{t('fixedDiscount')}</Label>
                        </div>
                      </RadioGroup>
                      
@@ -241,19 +250,19 @@ export default function ReturnsPage() {
                                 value={discountValue}
                                 onChange={(e) => setDiscountValue(e.target.value)}
                             />
-                            <Button variant="outline" onClick={applyDiscount}>Apply</Button>
+                            <Button variant="outline" onClick={applyDiscount}>{t('apply')}</Button>
                         </div>
                      )}
                     
                     <div className="space-y-2">
-                        <Label htmlFor="reason">Reason for Adjustment</Label>
+                        <Label htmlFor="reason">{t('reason')}</Label>
                         <Select value={reason} onValueChange={setReason}>
                             <SelectTrigger id="reason">
-                                <SelectValue placeholder="Select a reason..." />
+                                <SelectValue placeholder={t('selectReason')} />
                             </SelectTrigger>
                             <SelectContent>
                                 {adjustmentReasons.map(r => (
-                                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                                    <SelectItem key={r} value={r}>{t(`reasons.${reasonOptions[r as keyof typeof reasonOptions]}` as const)}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -264,15 +273,15 @@ export default function ReturnsPage() {
 
                      <div className="p-4 bg-muted/50 rounded-lg space-y-2">
                         <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Original Amount</span>
+                            <span className="text-muted-foreground">{t('originalAmount')}</span>
                             <span>${foundTransaction.amount.toFixed(2)}</span>
                         </div>
                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Discount</span>
+                            <span className="text-muted-foreground">{t('discount')}</span>
                             <span>-${(foundTransaction.amount - (finalAmount ?? foundTransaction.amount)).toFixed(2)}</span>
                         </div>
                          <div className="flex justify-between font-semibold text-lg">
-                            <span>New Final Amount</span>
+                            <span>{t('newFinalAmount')}</span>
                             <span className="text-green-600">${(finalAmount ?? foundTransaction.amount).toFixed(2)}</span>
                         </div>
                      </div>
@@ -282,7 +291,7 @@ export default function ReturnsPage() {
             ) : (
               <div className="flex flex-col items-center justify-center h-64 text-center">
                 <Ticket className="size-16 text-muted-foreground/50" />
-                <p className="mt-4 text-muted-foreground">Search for a paid ticket to begin.</p>
+                <p className="mt-4 text-muted-foreground">{t('findPlaceholder')}</p>
               </div>
             )}
           </CardContent>
@@ -290,14 +299,14 @@ export default function ReturnsPage() {
             <AlertDialog>
                 <AlertDialogTrigger asChild>
                     <Button variant="destructive" disabled={!foundTransaction}>
-                        <RotateCcw className="mr-2" /> Issue Full Refund
+                        <RotateCcw className="mr-2" /> {t('fullRefund')}
                     </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                    <AlertDialogTitle>Confirm Full Refund</AlertDialogTitle>
+                    <AlertDialogTitle>{t('confirmRefund')}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This will process a full refund of ${foundTransaction?.amount.toFixed(2)} for ticket {foundTransaction?.ticketId}. This action cannot be undone.
+                        {t('confirmRefundDescription', {amount: foundTransaction?.amount.toFixed(2), ticketId: foundTransaction?.ticketId})}
                     </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -307,7 +316,7 @@ export default function ReturnsPage() {
                 </AlertDialogContent>
             </AlertDialog>
             <Button onClick={handleProcessDiscount} disabled={!foundTransaction || finalAmount === foundTransaction.amount || discountType === 'none'}>
-                Process Discount
+                {t('processDiscount')}
             </Button>
           </CardFooter>
         </Card>

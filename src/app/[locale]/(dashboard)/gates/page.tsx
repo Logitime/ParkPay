@@ -10,6 +10,8 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { GateControl } from "@/components/dashboard/GateControl";
+import { useTranslations } from 'next-intl';
+
 
 // This would come from a settings context/store in a real app
 const gateSettings = [
@@ -34,21 +36,22 @@ const gateSettings = [
 ];
 
 export default function GatesPage() {
+    const t = useTranslations('Gates');
     const [isPolling, setIsPolling] = useState(true);
 
     return (
         <div className="flex flex-col h-full">
-            <Header title="Gate &amp; Camera Control" />
+            <Header title={t('title')} />
             <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
                  <Card>
                     <CardHeader>
-                        <CardTitle>System Settings</CardTitle>
-                        <CardDescription>Global controls for gate system operations.</CardDescription>
+                        <CardTitle>{t('systemSettings')}</CardTitle>
+                        <CardDescription>{t('systemSettingsDescription')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                          <div className="flex items-center space-x-2 rounded-lg border p-4 bg-muted/50 w-fit">
                             <Switch id="sensor-polling" checked={isPolling} onCheckedChange={setIsPolling} />
-                            <Label htmlFor="sensor-polling" className="flex-grow">Enable Live Sensor Polling</Label>
+                            <Label htmlFor="sensor-polling" className="flex-grow">{t('enablePolling')}</Label>
                         </div>
                     </CardContent>
                 </Card>

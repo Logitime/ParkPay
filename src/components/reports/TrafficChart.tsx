@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { Car } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const trafficData = [
   { hour: "8 AM", entries: 35, exits: 10 },
@@ -19,14 +20,15 @@ const trafficData = [
 
 
 export function TrafficChart({ filters }: { filters: any }) {
+    const t = useTranslations('Reports');
     // In a real app, you would use the `filters` prop to fetch and display dynamic data.
     return (
         <Card>
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div>
-                        <CardTitle>Traffic Analysis</CardTitle>
-                        <CardDescription>Entries and exits per hour.</CardDescription>
+                        <CardTitle>{t('trafficAnalysis')}</CardTitle>
+                        <CardDescription>{t('trafficHourly')}</CardDescription>
                     </div>
                     <Car className="h-8 w-8 text-primary" />
                 </div>
@@ -53,8 +55,8 @@ export function TrafficChart({ filters }: { filters: any }) {
                             contentStyle={{backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))'}} 
                         />
                         <Legend wrapperStyle={{fontSize: "14px"}} />
-                        <Bar dataKey="entries" name="Entries" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="exits" name="Exits" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="entries" name={t('entries')} fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="exits" name={t('exits')} fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
                     </BarChart>
                 </ResponsiveContainer>
             </CardContent>

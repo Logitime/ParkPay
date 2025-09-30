@@ -20,22 +20,39 @@ import {
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 
 export function SidebarLinks() {
+  const t = useTranslations('Sidebar');
   const pathname = usePathname();
+  const locale = useLocale();
 
   const links = [
-    { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/cashier', label: 'Cashier', icon: HandCoins },
-    { href: '/operator', label: 'Operator', icon: Shield },
-    { href: '/kiosk', label: 'Kiosk', icon: Presentation },
-    { href: '/gates', label: 'Gates', icon: Car },
-    { href: '/zones', label: 'Zones', icon: ParkingSquare },
-    { href: '/parkers', label: 'Parkers', icon: Users },
-    { href: '/reports', label: 'Reports', icon: BarChart3 },
-    { href: '/returns', label: 'Returns', icon: TicketPercent },
-    { href: '/settings', label: 'Settings', icon: Settings },
+    { href: '/', label: 'dashboard', icon: LayoutDashboard },
+    { href: '/cashier', label: 'cashier', icon: HandCoins },
+    { href: '/operator', label: 'operator', icon: Shield },
+    { href: '/kiosk', label: 'kiosk', icon: Presentation },
+    { href: '/gates', label: 'gates', icon: Car },
+    { href: '/zones', label: 'zones', icon: ParkingSquare },
+    { href: '/parkers', label: 'parkers', icon: Users },
+    { href: '/reports', label: 'reports', icon: BarChart3 },
+    { href: '/returns', label: 'returns', icon: TicketPercent },
+    { href: '/settings', label: 'settings', icon: Settings },
   ];
+  
+  // This helper function removes the locale from the start of the pathname
+  const getActivePath = (path: string) => {
+    const localePrefix = `/${locale}`;
+    if (path.startsWith(localePrefix)) {
+      const strippedPath = path.substring(localePrefix.length);
+      return strippedPath === '' ? '/' : strippedPath;
+    }
+    return path;
+  };
+  
+  const activePath = getActivePath(pathname);
+
 
   return (
     <SidebarMenu>
@@ -43,11 +60,11 @@ export function SidebarLinks() {
         <SidebarMenuItem key={link.href}>
           <Link href={link.href} passHref>
             <SidebarMenuButton
-              isActive={pathname === (link.href === '/' ? '/' : `${link.href}`)}
-              tooltip={link.label}
+              isActive={activePath === link.href}
+              tooltip={t(link.label as any)}
             >
               <link.icon />
-              <span>{link.label}</span>
+              <span>{t(link.label as any)}</span>
             </SidebarMenuButton>
           </Link>
         </SidebarMenuItem>

@@ -23,7 +23,7 @@ import QRCode from 'qrcode';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { CameraFeed } from '@/components/dashboard/CameraFeed';
-
+import { useTranslations } from 'next-intl';
 
 type GateStatus = 'open' | 'closed' | 'moving' | 'obstacle' | 'error';
 type ConnectionStatus = 'online' | 'offline' | 'checking';
@@ -48,6 +48,7 @@ const statusConfig: Record<GateStatus, { text: string; color: string; icon: Reac
 
 
 export function GateControl({ gateConfig, isPolling }: { gateConfig: GateConfig, isPolling: boolean}) {
+    const t = useTranslations('Gates');
     const { toast } = useToast();
     const [gateStatus, setGateStatus] = useState<GateStatus>('closed');
     const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('checking');
@@ -166,6 +167,8 @@ export function GateControl({ gateConfig, isPolling }: { gateConfig: GateConfig,
             });
         }
     };
+    
+    const currentStatusConfig = statusConfig[gateStatus];
 
 
     return (
@@ -174,8 +177,8 @@ export function GateControl({ gateConfig, isPolling }: { gateConfig: GateConfig,
                 <CardHeader>
                     <div className="flex items-start justify-between">
                         <div>
-                            <CardTitle>{gateConfig.name} Controls</CardTitle>
-                            <CardDescription>Manual controls and status.</CardDescription>
+                            <CardTitle>{t('controlsTitle', {name: gateConfig.name})}</CardTitle>
+                            <CardDescription>{t('controlsDescription')}</CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
                             <div className={cn('flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-full', 
@@ -198,14 +201,14 @@ export function GateControl({ gateConfig, isPolling }: { gateConfig: GateConfig,
                             carAtSensor ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'
                             )}>
                                 <Car className="size-6" />
-                                <span>{ gateStatus === 'error' ? 'Sensor Error' : carAtSensor ? 'Car Detected' : 'No Car Detected'}</span>
+                                <span>{ gateStatus === 'error' ? t('sensorError') : carAtSensor ? t('carDetected') : t('noCarDetected')}</span>
                         </div>
 
                          {isEntryGate ? (
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                     <Button className="w-full h-12 text-lg" disabled={!carAtSensor || gateStatus === 'error'} onClick={() => handleIssueTicketAndCapture(true)}>
-                                    <Ticket className="mr-2 size-5" /> Issue Manual Ticket
+                                    <Ticket className="mr-2 size-5" /> {t('issueManualTicket')}
                                     </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
@@ -223,7 +226,7 @@ export function GateControl({ gateConfig, isPolling }: { gateConfig: GateConfig,
                                         </div>
                                     </div>
                                     <AlertDialogFooter>
-                                        <AlertDialogAction onClick={() => handleGateAction('open')}>Open Gate</AlertDialogAction>
+                                        <AlertDialogAction onClick={() => handleGateAction('open')}>{t('openGate')}</AlertDialogAction>
                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
@@ -232,18 +235,18 @@ export function GateControl({ gateConfig, isPolling }: { gateConfig: GateConfig,
                              <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                     <Button className="w-full h-12 text-lg" variant="secondary" disabled={gateStatus === 'error'}>
-                                        <QrCode className="mr-2 size-5" /> Scan Exit Ticket
+                                        <QrCode className="mr-2 size-5" /> {t('scanExitTicket')}
                                     </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
-                                    <AlertDialogTitle>Scan Result (Simulation)</AlertDialogTitle>
+                                    <AlertDialogTitle>{t('scanResultTitle')}</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                        Ticket validated. Payment of $8.50 confirmed. The gate can now be opened.
+                                        {t('scanResultDescription')}
                                     </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                        <AlertDialogAction onClick={() => handleGateAction('open')}>Open Gate</AlertDialogAction>
+                                        <AlertDialogAction onClick={() => handleGateAction('open')}>{t('openGate')}</AlertDialogAction>
                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
@@ -255,10 +258,10 @@ export function GateControl({ gateConfig, isPolling }: { gateConfig: GateConfig,
 
                     <div>
                         <div className="flex justify-between items-center mb-2">
-                            <h3 className="font-semibold">Manual Override</h3>
-                            <div className={cn('flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-full text-white', statusConfig[gateStatus].color)}>
-                                {statusConfig[gateStatus].icon}
-                                <span>{statusConfig[gateStatus].text}</span>
+                            <h3 className="font-semibold">{t('manualOverride')}</h3>
+                            <div className={cn('flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-full text-white', currentStatusConfig.color)}>
+                                {currentStatusConfig.icon}
+                                <span>{t(`status.${gateStatus}` as any)}</span>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
@@ -267,14 +270,14 @@ export function GateControl({ gateConfig, isPolling }: { gateConfig: GateConfig,
                                 disabled={gateStatus === 'open' || gateStatus === 'moving' || gateStatus === 'error'}
                                 variant="outline"
                             >
-                                <ChevronUp className="mr-2 size-4" /> Open Gate
+                                <ChevronUp className="mr-2 size-4" /> {t('openGate')}
                             </Button>
                             <Button
                                 onClick={() => handleGateAction('close')}
                                 disabled={gateStatus === 'closed' || gateStatus === 'moving' || gateStatus === 'error'}
                                 variant="outline"
                             >
-                                <ChevronDown className="mr-2 size-4" /> Close Gate
+                                <ChevronDown className="mr-2 size-4" /> {t('closeGate')}
                             </Button>
                         </div>
                     </div>

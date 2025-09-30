@@ -27,6 +27,8 @@ import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { useTranslations } from 'next-intl';
+
 
 // This would come from settings in a real app
 const entryGateConfig = {
@@ -51,6 +53,7 @@ const statusConfig: Record<GateStatus, { text: string; color: string; icon: Reac
 
 
 export default function OperatorPage() {
+    const t = useTranslations('Operator');
     const { toast } = useToast();
     const [gateStatus, setGateStatus] = useState<GateStatus>('closed');
     const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('checking');
@@ -147,17 +150,19 @@ export default function OperatorPage() {
         }
     };
 
+    const currentStatusConfig = statusConfig[gateStatus];
+
 
     return (
         <div className="flex flex-col h-full">
-            <Header title="Gate Operator" />
+            <Header title={t('title')} />
             <main className="flex-1 p-4 md:p-6 lg:p-8 flex justify-center">
                 <Card className="w-full max-w-lg">
                     <CardHeader>
                         <div className="flex items-start justify-between">
                             <div>
-                                <CardTitle>Entry Gate Control</CardTitle>
-                                <CardDescription>Manual controls for the main entry gate.</CardDescription>
+                                <CardTitle>{t('entryGateControl')}</CardTitle>
+                                <CardDescription>{t('entryGateControlDescription')}</CardDescription>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Badge variant="secondary">{entryGateConfig.name}</Badge>
@@ -176,7 +181,7 @@ export default function OperatorPage() {
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="flex items-center space-x-2 rounded-lg border p-3 bg-muted/50">
-                            <Label htmlFor="sensor-polling" className="flex-grow">Enable Sensor Polling</Label>
+                            <Label htmlFor="sensor-polling" className="flex-grow">{t('enablePolling')}</Label>
                             <Switch id="sensor-polling" checked={isPolling} onCheckedChange={setIsPolling} />
                         </div>
                         
@@ -188,31 +193,31 @@ export default function OperatorPage() {
                                 carAtEntry ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'
                                 )}>
                                     <Car className="size-6" />
-                                    <span>{ gateStatus === 'error' ? 'Sensor Error' : carAtEntry ? 'Car Detected at Gate' : 'No Car Detected'}</span>
+                                    <span>{ gateStatus === 'error' ? t('sensorError') : carAtEntry ? t('carDetected') : t('noCarDetected')}</span>
                             </div>
 
                              <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                     <Button className="w-full h-12 text-lg" disabled={!carAtEntry || gateStatus === 'error'} onClick={handleIssueTicket}>
-                                    <Ticket className="mr-2 size-5" /> Issue Manual Ticket
+                                    <Ticket className="mr-2 size-5" /> {t('issueManualTicket')}
                                     </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
-                                    <AlertDialogTitle>Manual Ticket Issued</AlertDialogTitle>
+                                    <AlertDialogTitle>{t('manualTicketIssued')}</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                        A new parking ticket has been generated. Provide this to the driver. The gate can now be opened.
+                                        {t('manualTicketIssuedDescription')}
                                     </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <div className="flex flex-col items-center justify-center gap-4 py-4">
                                         {qrCodeUrl ? <Image src={qrCodeUrl} alt="QR Code" width={200} height={200} /> : <Loader2 className="size-8 animate-spin" />}
                                         <div className="text-center">
-                                            <p className="text-sm text-muted-foreground">Ticket ID</p>
+                                            <p className="text-sm text-muted-foreground">{t('ticketId')}</p>
                                             <p className="font-mono font-semibold text-lg">{generatedTicketId}</p>
                                         </div>
                                     </div>
                                     <AlertDialogFooter>
-                                    <AlertDialogAction>Done</AlertDialogAction>
+                                    <AlertDialogAction>{t('done')}</AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
@@ -222,10 +227,10 @@ export default function OperatorPage() {
 
                         <div>
                             <div className="flex justify-between items-center mb-2">
-                                <h3 className="font-semibold">Manual Override</h3>
-                                <div className={cn('flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-full text-white', statusConfig[gateStatus].color)}>
-                                    {statusConfig[gateStatus].icon}
-                                    <span>{statusConfig[gateStatus].text}</span>
+                                <h3 className="font-semibold">{t('manualOverride')}</h3>
+                                <div className={cn('flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-full text-white', currentStatusConfig.color)}>
+                                    {currentStatusConfig.icon}
+                                    <span>{t(`status.${gateStatus}` as const)}</span>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
@@ -234,14 +239,14 @@ export default function OperatorPage() {
                                     disabled={gateStatus === 'open' || gateStatus === 'moving' || gateStatus === 'error'}
                                     variant="outline"
                                 >
-                                    <ChevronUp className="mr-2 size-4" /> Open Gate
+                                    <ChevronUp className="mr-2 size-4" /> {t('openGate')}
                                 </Button>
                                 <Button
                                     onClick={() => handleGateAction('close')}
                                     disabled={gateStatus === 'closed' || gateStatus === 'moving' || gateStatus === 'error'}
                                     variant="outline"
                                 >
-                                    <ChevronDown className="mr-2 size-4" /> Close Gate
+                                    <ChevronDown className="mr-2 size-4" /> {t('closeGate')}
                                 </Button>
                             </div>
                         </div>

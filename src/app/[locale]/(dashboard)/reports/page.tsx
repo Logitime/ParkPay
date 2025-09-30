@@ -14,8 +14,11 @@ import { TransactionsTable } from "@/components/reports/TransactionsTable";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslations } from "next-intl";
+
 
 export default function ReportsPage() {
+    const t = useTranslations('Reports');
     const { toast } = useToast();
     const [date, setDate] = useState<DateRange | undefined>({
         from: new Date(2024, 0, 20),
@@ -34,19 +37,19 @@ export default function ReportsPage() {
 
     const handleExport = () => {
         toast({
-            title: "Exporting Report",
-            description: "In a real application, this would download a CSV file of the report data.",
+            title: t('exporting'),
+            description: t('exportDescription'),
         });
     }
 
     return (
         <div className="flex flex-col h-full">
-            <Header title="Reports" />
+            <Header title={t('title')} />
             <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
                 <div className="flex flex-wrap gap-4 justify-between items-center">
                     <div>
-                        <h2 className="text-2xl font-bold font-headline">Financial & Traffic Reports</h2>
-                        <p className="text-muted-foreground">Analyze revenue and transaction trends.</p>
+                        <h2 className="text-2xl font-bold font-headline">{t('pageTitle')}</h2>
+                        <p className="text-muted-foreground">{t('pageDescription')}</p>
                     </div>
                      <div className="flex flex-wrap items-center gap-4">
                         <Filters 
@@ -61,7 +64,7 @@ export default function ReportsPage() {
                         />
                         <Button onClick={handleExport}>
                             <Download className="mr-2" />
-                            Export Report
+                            {t('export')}
                         </Button>
                     </div>
                 </div>

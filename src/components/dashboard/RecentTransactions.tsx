@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { BarChart3 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 const transactions = [
   {
@@ -65,14 +66,15 @@ const transactions = [
 ];
 
 export function RecentTransactions() {
+  const t = useTranslations('Dashboard');
   return (
     <Card className="lg:col-span-3">
       <CardHeader>
         <div className="flex items-start justify-between">
             <div>
-            <CardTitle>Recent Transactions</CardTitle>
+            <CardTitle>{t('recentTransactions')}</CardTitle>
             <CardDescription>
-                A log of the most recent vehicle entries and exits.
+                {t('recentTransactionsDescription')}
             </CardDescription>
             </div>
             <BarChart3 className="h-8 w-8 text-primary" />
@@ -82,13 +84,13 @@ export function RecentTransactions() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Ticket ID</TableHead>
-              <TableHead className="hidden sm:table-cell">Plate</TableHead>
-              <TableHead>Entry</TableHead>
-              <TableHead className="hidden sm:table-cell">Exit</TableHead>
-              <TableHead>Duration</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
+              <TableHead>{t('ticketId')}</TableHead>
+              <TableHead className="hidden sm:table-cell">{t('plate')}</TableHead>
+              <TableHead>{t('entry')}</TableHead>
+              <TableHead className="hidden sm:table-cell">{t('exit')}</TableHead>
+              <TableHead>{t('duration')}</TableHead>
+              <TableHead>{t('status')}</TableHead>
+              <TableHead className="text-right">{t('amount')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -108,7 +110,7 @@ export function RecentTransactions() {
                         : 'bg-blue-100 text-blue-800'
                     }
                   >
-                    {tx.status}
+                    {tx.status === 'Paid' ? t('paid') : t('inPark')}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">{tx.amount}</TableCell>

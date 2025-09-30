@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { ZoneStatus } from "@/components/dashboard/ZoneStatus";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslations } from "next-intl";
 
 const zones = [
   { name: 'Zone A - Surface', available: 25, total: 100 },
@@ -11,9 +12,10 @@ const zones = [
 ];
 
 export default function ZonesPage() {
+    const t = useTranslations('Zones');
     return (
         <div className="flex flex-col h-full">
-            <Header title="Zones" />
+            <Header title={t('title')} />
             <main className="flex-1 p-4 md:p-6 lg:p-8">
                 <div className="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                     {zones.map(zone => (
@@ -24,7 +26,7 @@ export default function ZonesPage() {
                                     <p className="text-sm text-muted-foreground">{zone.available} of {zone.total} spots available</p>
                                 </div>
                                 <div className="h-48 bg-muted flex items-center justify-center">
-                                    <p className="text-muted-foreground">Map placeholder</p>
+                                    <p className="text-muted-foreground">{t('mapPlaceholder')}</p>
                                 </div>
                             </CardContent>
                         </Card>

@@ -11,8 +11,11 @@ import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/icons/Logo';
 import { mockCashiers } from '@/lib/mock-data';
 import { Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+
 
 export default function LoginPage() {
+    const t = useTranslations('Login');
     const router = useRouter();
     const { toast } = useToast();
     const [email, setEmail] = useState('');
@@ -29,8 +32,8 @@ export default function LoginPage() {
             // For this prototype, we're not checking the password
             if (user) {
                 toast({
-                    title: "Login Successful",
-                    description: `Welcome back, ${user.name}!`,
+                    title: t('loginSuccess'),
+                    description: t('welcomeBack', {name: user.name}),
                 });
                 // In a real app, you'd set a session cookie or token here.
                 // For the prototype, we just navigate.
@@ -38,8 +41,8 @@ export default function LoginPage() {
             } else {
                 toast({
                     variant: 'destructive',
-                    title: 'Login Failed',
-                    description: 'Invalid email or password. Please try again.',
+                    title: t('loginFailed'),
+                    description: t('loginFailedDescription'),
                 });
                 setIsLoading(false);
             }
@@ -52,24 +55,24 @@ export default function LoginPage() {
                 <CardHeader className="text-center">
                     <div className="flex justify-center items-center gap-2 mb-4">
                         <Logo className="size-8 text-primary" />
-                        <CardTitle className="text-3xl">ParkPay</CardTitle>
+                        <CardTitle className="text-3xl">{t('title')}</CardTitle>
                     </div>
-                    <CardDescription>Enter your credentials to access the dashboard.</CardDescription>
+                    <CardDescription>{t('description')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
+                        <Label htmlFor="email">{t('email')}</Label>
                         <Input 
                             id="email" 
                             type="email" 
-                            placeholder="user@parkpay.co" 
+                            placeholder={t('emailPlaceholder')} 
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             disabled={isLoading}
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="password">Password</Label>
+                        <Label htmlFor="password">{t('password')}</Label>
                         <Input 
                             id="password" 
                             type="password" 
@@ -83,7 +86,7 @@ export default function LoginPage() {
                 <CardFooter>
                     <Button className="w-full" onClick={handleLogin} disabled={isLoading}>
                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Login
+                        {t('login')}
                     </Button>
                 </CardFooter>
             </Card>

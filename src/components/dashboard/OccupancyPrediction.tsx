@@ -32,6 +32,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { z } from 'zod';
+import { useTranslations } from 'next-intl';
 
 const formSchema = z.object({
   description: z
@@ -50,6 +51,7 @@ const occupancyColors = {
 };
 
 export function OccupancyPrediction() {
+  const t = useTranslations('Dashboard');
   const [prediction, setPrediction] = useState<PredictOccupancyOutput | null>(
     null
   );
@@ -72,7 +74,7 @@ export function OccupancyPrediction() {
     if (error) {
       toast({
         variant: 'destructive',
-        title: 'Prediction Failed',
+        title: t('predictionFailed'),
         description: error,
       });
     } else if (data) {
@@ -104,9 +106,9 @@ export function OccupancyPrediction() {
           <CardHeader>
             <div className="flex items-start justify-between">
               <div>
-                <CardTitle>AI Occupancy Prediction</CardTitle>
+                <CardTitle>{t('occupancyPrediction')}</CardTitle>
                 <CardDescription>
-                  Predict occupancy based on current conditions.
+                  {t('occupancyDescription')}
                 </CardDescription>
               </div>
               <BrainCircuit className="h-8 w-8 text-primary" />
@@ -117,7 +119,7 @@ export function OccupancyPrediction() {
               <div className="flex flex-col items-center justify-center h-64">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
                 <p className="mt-4 text-muted-foreground">
-                  Analyzing conditions...
+                  {t('analyzeConditions')}
                 </p>
               </div>
             ) : prediction ? (
@@ -133,7 +135,7 @@ export function OccupancyPrediction() {
                       <PolarGrid gridType="circle" />
                       <PolarAngleAxis dataKey="subject" tick={() => null} />
                       <Radar
-                        name="Confidence"
+                        name={t('confidence')}
                         dataKey="value"
                         stroke="hsl(var(--primary))"
                         fill="hsl(var(--primary))"
@@ -142,7 +144,7 @@ export function OccupancyPrediction() {
                     </RadarChart>
                   </ResponsiveContainer>
                 </div>
-                <p className="text-sm text-muted-foreground -mt-4">Confidence</p>
+                <p className="text-sm text-muted-foreground -mt-4">{t('confidence')}</p>
                 <p className={`text-4xl font-bold font-headline mt-2 capitalize ${occupancyColorClass}`}>
                   {prediction.occupancyLevel}
                 </p>
@@ -158,11 +160,11 @@ export function OccupancyPrediction() {
                   render={({ field }) => (
                     <FormItem className="w-full">
                       <FormLabel>
-                        Describe current conditions (weather, events, etc.)
+                        {t('conditionsLabel')}
                       </FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="e.g., 'Weekday afternoon, rainy, local football game nearby...'"
+                          placeholder={t('conditionsPlaceholder')}
                           className="resize-none"
                           {...field}
                           rows={4}
@@ -184,14 +186,14 @@ export function OccupancyPrediction() {
                   form.reset();
                 }}
               >
-                Start New Prediction
+                {t('newPrediction')}
               </Button>
             ) : (
               <Button type="submit" disabled={isLoading}>
                 {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}
-                Predict
+                {t('predict')}
               </Button>
             )}
           </CardFooter>

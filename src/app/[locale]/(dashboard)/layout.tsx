@@ -13,12 +13,15 @@ import { SidebarLinks } from '@/components/layout/SidebarLinks';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
+import {useTranslations} from 'next-intl';
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const t = useTranslations('Sidebar');
+
   return (
     <SidebarProvider>
       <Sidebar
@@ -43,14 +46,14 @@ export default function DashboardLayout({
                 <AvatarFallback>AD</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
-                <span className="text-sm font-medium">Admin User</span>
+                <span className="text-sm font-medium">{t('adminUser')}</span>
                 <span className="text-xs text-muted-foreground">
                   admin@parkpay.co
                 </span>
               </div>
             </div>
             <Link href="/login" passHref>
-                <Button variant="ghost" size="icon" aria-label="Log Out">
+                <Button variant="ghost" size="icon" aria-label={t('logout')}>
                     <LogOut className="size-4" />
                 </Button>
             </Link>

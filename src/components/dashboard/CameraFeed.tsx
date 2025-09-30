@@ -10,12 +10,54 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { saveSnapshot } from '@/app/actions';
 import { format } from 'date-fns';
 
-export function CameraFeed({ gateName }: { gateName: string }) {
+export function CameraFeed({ gateName, captureTrigger }: { gateName: string, captureTrigger?: number }) {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+
+  const handleCapture = async (isAuto: boolean = false) => {
+    if (!videoRef.current || !canvasRef.current || isCapturing) return;
+    setIsCapturing(true);
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext('2d');
+    if (context) {
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageDataUrl = canvas.toDataURL('image/jpeg');
+      
+      const dateTime = format(new Date(), 'yyyyMMdd-HHmmss');
+      const fileName = `${gateName.replace(/\s+/g, '_')}-${dateTime}.jpg`;
+
+      const result = await saveSnapshot({ imageDataUrl, fileName });
+
+      if (result.success) {
+        toast({
+          title: isAuto ? 'Auto Snapshot Captured' : 'Snapshot Captured',
+          description: `Image saved as ${fileName} (simulated).`,
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Capture Failed',
+          description: result.message,
+        });
+      }
+    }
+    setIsCapturing(false);
+  };
+  
+  useEffect(() => {
+    if (captureTrigger && captureTrigger > 0) {
+      handleCapture(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [captureTrigger]);
+
 
   useEffect(() => {
     const getCameraPermission = async () => {
@@ -47,40 +89,6 @@ export function CameraFeed({ gateName }: { gateName: string }) {
       }
     };
   }, [toast]);
-
-  const handleCapture = async () => {
-    if (!videoRef.current || !canvasRef.current) return;
-    setIsCapturing(true);
-
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const context = canvas.getContext('2d');
-    if (context) {
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imageDataUrl = canvas.toDataURL('image/jpeg');
-      
-      const dateTime = format(new Date(), 'yyyyMMdd-HHmmss');
-      const fileName = `${gateName.replace(/\s+/g, '_')}-${dateTime}.jpg`;
-
-      const result = await saveSnapshot({ imageDataUrl, fileName });
-
-      if (result.success) {
-        toast({
-          title: 'Snapshot Captured',
-          description: `Image saved as ${fileName} (simulated).`,
-        });
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Capture Failed',
-          description: result.message,
-        });
-      }
-    }
-    setIsCapturing(false);
-  };
 
   return (
     <Card>
@@ -115,7 +123,7 @@ export function CameraFeed({ gateName }: { gateName: string }) {
       <CardFooter>
         <Button 
             className="w-full" 
-            onClick={handleCapture}
+            onClick={() => handleCapture(false)}
             disabled={!hasCameraPermission || isCapturing}
         >
             {isCapturing ? <Loader2 className="mr-2 animate-spin" /> : <Video className="mr-2" />}

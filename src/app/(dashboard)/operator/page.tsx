@@ -59,9 +59,18 @@ export default function OperatorPage() {
     const [isPolling, setIsPolling] = useState(true);
     const [generatedTicketId, setGeneratedTicketId] = useState<string | null>(null);
     const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+    const [captureTrigger, setCaptureTrigger] = useState(0);
 
     const pollFailures = useRef(0);
     const MAX_FAILURES = 3;
+    const prevCarAtEntry = useRef(false);
+
+    useEffect(() => {
+        if (carAtEntry && !prevCarAtEntry.current) {
+            setCaptureTrigger(Date.now());
+        }
+        prevCarAtEntry.current = carAtEntry;
+    }, [carAtEntry]);
 
     useEffect(() => {
         let intervalId: NodeJS.Timeout | null = null;
@@ -248,7 +257,7 @@ export default function OperatorPage() {
 
                     </CardContent>
                 </Card>
-                <CameraFeed gateName={entryGateConfig.name} />
+                <CameraFeed gateName={entryGateConfig.name} captureTrigger={captureTrigger} />
             </main>
         </div>
     )

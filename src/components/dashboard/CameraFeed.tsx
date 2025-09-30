@@ -9,11 +9,9 @@ import { Video, Camera, AlertTriangle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { saveSnapshot } from '@/app/actions';
 import { format } from 'date-fns';
-import { useTranslations } from 'next-intl';
 
 
 export function CameraFeed({ gateName, captureTrigger, imageFileName }: { gateName: string, captureTrigger?: number, imageFileName?: string | null }) {
-  const t = useTranslations('Gates');
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -40,13 +38,13 @@ export function CameraFeed({ gateName, captureTrigger, imageFileName }: { gateNa
 
       if (result.success) {
         toast({
-          title: isAuto ? t('autoSnapshotCaptured') : t('snapshotCaptured'),
-          description: t('imageSaved', {fileName}),
+          title: isAuto ? 'Auto Snapshot Captured' : 'Snapshot Captured',
+          description: `Image saved as ${fileName} (simulated).`,
         });
       } else {
         toast({
           variant: 'destructive',
-          title: t('captureFailed'),
+          title: 'Capture Failed',
           description: result.message,
         });
       }
@@ -76,8 +74,8 @@ export function CameraFeed({ gateName, captureTrigger, imageFileName }: { gateNa
         setHasCameraPermission(false);
         toast({
           variant: 'destructive',
-          title: t('cameraAccessRequired'),
-          description: t('cameraAccessDescription'),
+          title: 'Camera Access Required',
+          description: 'Please allow camera access in your browser settings to use this feature.',
         });
       }
     };
@@ -91,14 +89,14 @@ export function CameraFeed({ gateName, captureTrigger, imageFileName }: { gateNa
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [toast, t]);
+  }, [toast]);
 
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
             <Camera className="size-5" />
-            <CardTitle className="text-lg">{t('cctvFeed', {gateName})}</CardTitle>
+            <CardTitle className="text-lg">CCTV Feed: {gateName}</CardTitle>
         </div>
       </CardHeader>
       <CardContent>
@@ -109,16 +107,16 @@ export function CameraFeed({ gateName, captureTrigger, imageFileName }: { gateNa
           {hasCameraPermission === null && (
              <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80">
                 <Loader2 className="size-8 animate-spin text-muted-foreground" />
-                <p className="mt-2 text-sm text-muted-foreground">{t('initializingCamera')}</p>
+                <p className="mt-2 text-sm text-muted-foreground">Initializing camera...</p>
              </div>
           )}
         </div>
         {hasCameraPermission === false && (
             <Alert variant="destructive" className="mt-4">
               <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>{t('cameraAccessRequired')}</AlertTitle>
+              <AlertTitle>Camera Access Required</AlertTitle>
               <AlertDescription>
-                {t('cameraAccessDescription')}
+                Please allow camera access in your browser settings to use this feature.
               </AlertDescription>
             </Alert>
         )}
@@ -130,7 +128,7 @@ export function CameraFeed({ gateName, captureTrigger, imageFileName }: { gateNa
             disabled={!hasCameraPermission || isCapturing}
         >
             {isCapturing ? <Loader2 className="mr-2 animate-spin" /> : <Video className="mr-2" />}
-            {isCapturing ? t('capturing') : t('captureSnapshot')}
+            {isCapturing ? 'Capturing...' : 'Capture Snapshot'}
         </Button>
       </CardFooter>
     </Card>

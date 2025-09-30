@@ -37,11 +37,9 @@ export function SidebarLinks() {
   ];
   
   const getActivePath = (path: string) => {
-    // Handle the case where the path is just the locale, which should map to the dashboard
-    if (path === '/en' || path === '/ar' || path === '/') return '/dashboard';
-    // Remove locale prefix for accurate comparison
-    const strippedPath = path.replace(/^\/(en|ar)/, '');
-    return strippedPath || '/dashboard';
+    // This handles root path correctly
+    if (path === '/') return '/dashboard';
+    return path;
   };
   
   const activePath = getActivePath(pathname);

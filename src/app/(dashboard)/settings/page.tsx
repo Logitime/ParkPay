@@ -638,7 +638,7 @@ export default function SettingsPage() {
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="edit-tariff-desc" className="text-right">Description</Label>
                                     <Textarea id="edit-tariff-desc" value={editingTariff.description} onChange={(e) => handleTariffChange('description', e.target.value)} className="col-span-3" />
-                                </div>
+                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="edit-tariff-rate" className="text-right">Rate</Label>
                                     <Input id="edit-tariff-rate" value={editingTariff.rate} onChange={(e) => handleTariffChange('rate', e.target.value)} className="col-span-3" />

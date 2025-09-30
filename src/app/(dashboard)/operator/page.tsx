@@ -26,6 +26,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { CameraFeed } from '@/components/dashboard/CameraFeed';
 
 
 // This would come from settings in a real app
@@ -151,8 +152,8 @@ export default function OperatorPage() {
     return (
         <div className="flex flex-col h-full">
             <Header title="Gate Operator" />
-            <main className="flex-1 p-4 md:p-6 lg:p-8 flex items-center justify-center">
-                <Card className="w-full max-w-md">
+            <main className="flex-1 p-4 md:p-6 lg:p-8 grid gap-8 md:grid-cols-2">
+                <Card className="w-full">
                     <CardHeader>
                         <div className="flex items-start justify-between">
                             <div>
@@ -247,6 +248,7 @@ export default function OperatorPage() {
 
                     </CardContent>
                 </Card>
+                <CameraFeed gateName={entryGateConfig.name} />
             </main>
         </div>
     )

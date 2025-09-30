@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 'use server';
 import { predictOccupancy, PredictOccupancyInput, PredictOccupancyOutput } from "@/ai/flows/occupancy-prediction";
@@ -181,4 +180,23 @@ export async function readGateSensor(input: z.infer<typeof ReadInputActionSchema
     }
 }
 
-    
+const SnapshotActionSchema = z.object({
+  imageDataUrl: z.string(),
+  fileName: z.string(),
+});
+
+export async function saveSnapshot(input: z.infer<typeof SnapshotActionSchema>): Promise<{ success: boolean; message: string; }> {
+  const validatedInput = SnapshotActionSchema.safeParse(input);
+  if (!validatedInput.success) {
+    return { success: false, message: validatedInput.error.errors.map((e) => e.message).join(', ') };
+  }
+
+  const { fileName } = validatedInput.data;
+
+  // In a real application, you would save the file to a persistent store like Cloud Storage.
+  // The Node.js `fs` module is not recommended for serverless environments.
+  // For this prototype, we will just log that the action was called.
+  console.log(`Simulating save of snapshot: ${fileName}`);
+
+  return { success: true, message: `Snapshot ${fileName} saved successfully (simulated).` };
+}

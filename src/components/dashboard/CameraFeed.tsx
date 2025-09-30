@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { saveSnapshot } from '@/app/actions';
 import { format } from 'date-fns';
 
-export function CameraFeed({ gateName, captureTrigger }: { gateName: string, captureTrigger?: number }) {
+export function CameraFeed({ gateName, captureTrigger, imageFileName }: { gateName: string, captureTrigger?: number, imageFileName?: string | null }) {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -30,8 +30,8 @@ export function CameraFeed({ gateName, captureTrigger }: { gateName: string, cap
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       const imageDataUrl = canvas.toDataURL('image/jpeg');
       
-      const dateTime = format(new Date(), 'yyyyMMdd-HHmmss');
-      const fileName = `${gateName.replace(/\s+/g, '_')}-${dateTime}.jpg`;
+      // Use the provided imageFileName (ticket ID) if available, otherwise generate a timestamped one for manual captures
+      const fileName = imageFileName ? `${imageFileName}.jpg` : `${gateName.replace(/\s+/g, '_')}-${format(new Date(), 'yyyyMMdd-HHmmss')}.jpg`;
 
       const result = await saveSnapshot({ imageDataUrl, fileName });
 

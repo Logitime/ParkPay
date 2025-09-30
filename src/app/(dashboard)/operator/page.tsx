@@ -159,6 +159,7 @@ export default function OperatorPage() {
                                 <CardDescription>Manual controls for the main entry gate.</CardDescription>
                             </div>
                             <div className="flex items-center gap-2">
+                                <Badge variant="secondary">{entryGateConfig.name}</Badge>
                                 <div className={cn('flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-full', 
                                     connectionStatus === 'online' ? 'bg-green-100 text-green-800' : 
                                     connectionStatus === 'offline' ? 'bg-destructive text-destructive-foreground' :
@@ -224,7 +225,7 @@ export default function OperatorPage() {
                                 <div className={cn('flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-full text-white', statusConfig[gateStatus].color)}>
                                     {statusConfig[gateStatus].icon}
                                     <span>{statusConfig[gateStatus].text}</span>
-                                </div>
+                                d</div>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 <Button

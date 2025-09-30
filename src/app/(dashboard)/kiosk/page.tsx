@@ -167,18 +167,32 @@ export default function KioskPage() {
                 );
             case 'visitor_payment':
                 return (
-                    <div className="text-center">
-                        <h2 className="text-3xl font-semibold mb-2">Parking Fee Due</h2>
-                        <p className="text-8xl font-bold text-primary mb-6">$13.50</p>
-                        <div className="grid grid-cols-2 gap-4 text-left">
-                            <div className="flex items-center gap-2"><Car className="size-5 text-muted-foreground" /> <span>{visitorTicket.plate}</span></div>
-                            <div className="flex items-center gap-2"><Calendar className="size-5 text-muted-foreground" /> <span>Duration: 2h 30m</span></div>
+                    <div className="grid md:grid-cols-2 gap-8 items-center">
+                        <div className="text-center md:text-left">
+                            <h2 className="text-3xl font-semibold mb-2">Parking Fee Due</h2>
+                            <p className="text-8xl font-bold text-primary mb-6">$13.50</p>
+                            <div className="grid grid-cols-2 gap-4 text-left">
+                                <div className="flex items-center gap-2"><Car className="size-5 text-muted-foreground" /> <span>{visitorTicket.plate}</span></div>
+                                <div className="flex items-center gap-2"><Calendar className="size-5 text-muted-foreground" /> <span>Duration: 2h 30m</span></div>
+                            </div>
+                            <Card className="mt-6 bg-yellow-50 border-yellow-200">
+                                <CardContent className="p-4">
+                                    <p className="font-semibold text-yellow-800">Please complete payment at the cashier station or use the payment machine.</p>
+                                </CardContent>
+                            </Card>
                         </div>
-                        <Card className="mt-6 bg-yellow-50 border-yellow-200">
-                             <CardContent className="p-4">
-                                <p className="font-semibold text-yellow-800">Please complete payment at the cashier station or use the payment machine.</p>
-                            </CardContent>
-                        </Card>
+                         <div className="flex flex-col gap-2">
+                             <p className="text-sm font-medium text-center md:text-left">Entry Snapshot</p>
+                            <div className="aspect-video w-full bg-muted rounded-md overflow-hidden relative">
+                                <Image
+                                    src={`https://picsum.photos/seed/${visitorTicket.id}/600/400`}
+                                    alt="Vehicle at entry"
+                                    layout="fill"
+                                    objectFit="cover"
+                                    data-ai-hint="vehicle entry"
+                                />
+                            </div>
+                        </div>
                     </div>
                 );
             case 'parker_info':
@@ -243,7 +257,7 @@ export default function KioskPage() {
                 </div>
             </header>
             <main className="flex-1 flex items-center justify-center p-8">
-                <Card className="w-full max-w-2xl min-h-[500px]">
+                <Card className="w-full max-w-4xl min-h-[500px]">
                     <CardContent className="p-12 flex items-center justify-center h-full">
                        {mode === 'entry' ? renderEntryScreen() : renderExitScreen()}
                     </CardContent>

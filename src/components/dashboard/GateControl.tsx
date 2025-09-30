@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { controlGate, readGateSensor } from "@/app/actions";
+import { controlGate, readGateSensor, saveSnapshot } from "@/app/actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -64,11 +64,15 @@ export function GateControl({ gateConfig, isPolling }: { gateConfig: GateConfig,
 
     // Auto-capture logic
     useEffect(() => {
-        if (carAtSensor && !prevCarAtSensor.current) {
+        if (isEntryGate && carAtSensor && !prevCarAtSensor.current) {
+            handleIssueTicketAndCapture();
+        } else if (!isEntryGate && carAtSensor && !prevCarAtSensor.current) {
+            // For exit gates, just trigger capture, no ticket needed
             setCaptureTrigger(Date.now());
         }
         prevCarAtSensor.current = carAtSensor;
-    }, [carAtSensor]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [carAtSensor, isEntryGate]);
 
     // Sensor polling logic
     useEffect(() => {
@@ -114,19 +118,23 @@ export function GateControl({ gateConfig, isPolling }: { gateConfig: GateConfig,
       }, [isPolling, gateStatus, gateConfig]);
 
 
-    const handleIssueTicket = async () => {
+    const handleIssueTicketAndCapture = async (isManual = false) => {
         const ticketId = `TKT-${Date.now()}`;
         setGeneratedTicketId(ticketId);
+        setCaptureTrigger(Date.now()); // Trigger capture
+        
         try {
             const url = await QRCode.toDataURL(ticketId, { width: 256 });
             setQrCodeUrl(url);
         } catch (err) {
             console.error("Failed to generate QR code:", err);
             setQrCodeUrl(null);
-            toast({
-                variant: 'destructive',
-                title: 'QR Code Generation Failed',
-            });
+            if(isManual) {
+                toast({
+                    variant: 'destructive',
+                    title: 'QR Code Generation Failed',
+                });
+            }
         }
     };
 
@@ -196,7 +204,7 @@ export function GateControl({ gateConfig, isPolling }: { gateConfig: GateConfig,
                          {isEntryGate ? (
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                    <Button className="w-full h-12 text-lg" disabled={!carAtSensor || gateStatus === 'error'} onClick={handleIssueTicket}>
+                                    <Button className="w-full h-12 text-lg" disabled={!carAtSensor || gateStatus === 'error'} onClick={() => handleIssueTicketAndCapture(true)}>
                                     <Ticket className="mr-2 size-5" /> Issue Manual Ticket
                                     </Button>
                                 </AlertDialogTrigger>
@@ -273,7 +281,7 @@ export function GateControl({ gateConfig, isPolling }: { gateConfig: GateConfig,
 
                 </CardContent>
             </Card>
-            <CameraFeed gateName={gateConfig.name} captureTrigger={captureTrigger} />
+            <CameraFeed gateName={gateConfig.name} captureTrigger={captureTrigger} imageFileName={generatedTicketId} />
         </div>
     )
 }

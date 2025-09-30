@@ -3,6 +3,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
@@ -319,52 +320,72 @@ export default function CashierPage() {
                             <Separator />
                             
                             {activeTicket ? (
-                                <div className="grid gap-6">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                                        <div className="flex items-center gap-2">
-                                            <Ticket className="size-5 text-muted-foreground" />
-                                            <div>
-                                                <p className="text-muted-foreground">Ticket ID</p>
-                                                <p className="font-semibold">{activeTicket.id}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Car className="size-5 text-muted-foreground" />
-                                            <div>
-                                                <p className="text-muted-foreground">License Plate</p>
-                                                <p className="font-semibold">{activeTicket.plate}</p>
-                                            </div>
-                                        </div>
-                                         {activeTicket.id !== 'LOST TICKET' && (
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-4">
                                             <div className="flex items-center gap-2">
-                                                <Clock className="size-5 text-muted-foreground" />
+                                                <Ticket className="size-5 text-muted-foreground" />
                                                 <div>
-                                                    <p className="text-muted-foreground">Entry Time</p>
-                                                    <p className="font-semibold">{activeTicket.entryTime.toLocaleString()}</p>
+                                                    <p className="text-muted-foreground">Ticket ID</p>
+                                                    <p className="font-semibold">{activeTicket.id}</p>
                                                 </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Car className="size-5 text-muted-foreground" />
+                                                <div>
+                                                    <p className="text-muted-foreground">License Plate</p>
+                                                    <p className="font-semibold">{activeTicket.plate}</p>
+                                                </div>
+                                            </div>
+                                            {activeTicket.id !== 'LOST TICKET' && (
+                                                <div className="flex items-center gap-2 col-span-2">
+                                                    <Clock className="size-5 text-muted-foreground" />
+                                                    <div>
+                                                        <p className="text-muted-foreground">Entry Time</p>
+                                                        <p className="font-semibold">{activeTicket.entryTime.toLocaleString()}</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        {getParkerBadge(activeTicket.type)}
+
+                                        <Card className="mt-4 bg-muted/50">
+                                            <CardContent className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                                <div className="flex flex-col items-center justify-center space-y-1">
+                                                    <p className="text-lg text-muted-foreground">Duration</p>
+                                                    <p className="text-4xl font-bold">{String(duration.hours).padStart(2, '0')}:{String(duration.minutes).padStart(2, '0')}</p>
+                                                </div>
+                                                <div className="flex flex-col items-center justify-center space-y-1">
+                                                    <p className="text-lg text-muted-foreground">Total Fee</p>
+                                                    <p className="text-4xl font-bold text-primary">${fee.toFixed(2)}</p>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                        {paymentProcessed && (
+                                            <div className="mt-4 flex items-center justify-center gap-2 text-green-600">
+                                                <CheckCircle className="size-5" />
+                                                <p className="font-semibold">Payment confirmed. Ready to open gate.</p>
                                             </div>
                                         )}
                                     </div>
-                                    {getParkerBadge(activeTicket.type)}
-
-                                    <Card className="bg-muted/50">
-                                        <CardContent className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                            <div className="flex flex-col items-center justify-center space-y-1">
-                                                <p className="text-lg text-muted-foreground">Duration</p>
-                                                <p className="text-4xl font-bold">{String(duration.hours).padStart(2, '0')}:{String(duration.minutes).padStart(2, '0')}</p>
-                                            </div>
-                                            <div className="flex flex-col items-center justify-center space-y-1">
-                                                <p className="text-lg text-muted-foreground">Total Fee</p>
-                                                <p className="text-4xl font-bold text-primary">${fee.toFixed(2)}</p>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                    {paymentProcessed && (
-                                         <div className="flex items-center justify-center gap-2 text-green-600">
-                                            <CheckCircle className="size-5" />
-                                            <p className="font-semibold">Payment confirmed. Ready to open gate.</p>
+                                     <div className="flex flex-col gap-2">
+                                        <Label>Entry Snapshot</Label>
+                                        <div className="aspect-video w-full bg-muted rounded-md overflow-hidden relative">
+                                             {activeTicket && activeTicket.id !== 'LOST TICKET' ? (
+                                                <Image
+                                                    src={`https://picsum.photos/seed/${activeTicket.id}/600/400`}
+                                                    alt="Vehicle at entry"
+                                                    layout="fill"
+                                                    objectFit="cover"
+                                                    data-ai-hint="vehicle entry"
+                                                />
+                                            ) : (
+                                                <div className="flex items-center justify-center h-full text-muted-foreground">
+                                                    <p>No snapshot available.</p>
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center justify-center h-64 text-center">

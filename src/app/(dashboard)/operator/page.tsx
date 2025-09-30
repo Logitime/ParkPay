@@ -26,6 +26,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 
 // This would come from settings in a real app
 const entryGateConfig = {
@@ -225,7 +226,7 @@ export default function OperatorPage() {
                                 <div className={cn('flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-full text-white', statusConfig[gateStatus].color)}>
                                     {statusConfig[gateStatus].icon}
                                     <span>{statusConfig[gateStatus].text}</span>
-                                d</div>
+                                </div>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 <Button

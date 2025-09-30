@@ -27,8 +27,8 @@ export default function DashboardLayout({
         className="border-r"
       >
         <SidebarHeader>
-          <div className="flex items-center gap-2">
-            <Logo className="size-7 text-primary" />
+          <div className="flex items-center gap-2 bg-orange-500 text-white p-2 rounded-md">
+            <Logo className="size-7" />
             <span className="text-lg font-bold font-headline">ParkPay</span>
           </div>
         </SidebarHeader>

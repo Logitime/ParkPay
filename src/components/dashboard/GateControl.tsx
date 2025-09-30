@@ -1,28 +1,13 @@
+
 'use client';
+
 import { useState, useEffect, useRef } from 'react';
-import { controlGate, readGateSensor } from '@/app/actions';
 import { useToast } from "@/hooks/use-toast";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import {
-  ArrowLeftRight,
-  ChevronDown,
-  ChevronUp,
-  Ticket,
-  QrCode,
-  TriangleAlert,
-  Loader2,
-  Car,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import { controlGate, readGateSensor } from "@/app/actions";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Ticket, Car, CheckCircle, MonitorSpeaker, Wifi, WifiOff, Loader2, ChevronUp, ChevronDown, TriangleAlert, QrCode } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,330 +21,259 @@ import {
 } from '@/components/ui/alert-dialog';
 import QRCode from 'qrcode';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
+import { CameraFeed } from '@/components/dashboard/CameraFeed';
 
-// This is a mock for settings until we fetch them from a persistent store
-const gateSettings = {
-    entryGateIp: "10.0.0.185",
-    entryGatePort: 5000,
-    entryGateInput: 1,
-    entryGateOutput: 1,
-    exitGateIp: "192.168.1.11",
-    exitGatePort: 5000,
-    exitGateInput: 2,
-    exitGateOutput: 2,
-};
 
 type GateStatus = 'open' | 'closed' | 'moving' | 'obstacle' | 'error';
+type ConnectionStatus = 'online' | 'offline' | 'checking';
 
-const statusConfig: Record<
-  GateStatus,
-  { text: string; color: string; icon: React.ReactNode }
-> = {
-  open: {
-    text: 'Open',
-    color: 'bg-green-500',
-    icon: <ChevronUp className="size-4" />,
-  },
-  closed: {
-    text: 'Closed',
-    color: 'bg-red-500',
-    icon: <ChevronDown className="size-4" />,
-  },
-  moving: {
-    text: 'Moving...',
-    color: 'bg-yellow-500',
-    icon: <Loader2 className="size-4 animate-spin" />,
-  },
-  obstacle: {
-    text: 'Obstacle!',
-    color: 'bg-orange-500',
-    icon: <TriangleAlert className="size-4" />,
-  },
-   error: {
-    text: 'Error',
-    color: 'bg-destructive',
-    icon: <TriangleAlert className="size-4" />,
-  },
+type GateConfig = {
+    id: number;
+    name: string;
+    ip: string;
+    port: number;
+    input: number;
+    output: number;
+    cameraUrl: string;
+}
+
+const statusConfig: Record<GateStatus, { text: string; color: string; icon: React.ReactNode }> = {
+  open: { text: 'Open', color: 'bg-green-500', icon: <ChevronUp className="size-4" /> },
+  closed: { text: 'Closed', color: 'bg-red-500', icon: <ChevronDown className="size-4" /> },
+  moving: { text: 'Moving...', color: 'bg-yellow-500', icon: <Loader2 className="size-4 animate-spin" /> },
+  obstacle: { text: 'Obstacle!', color: 'bg-orange-500', icon: <TriangleAlert className="size-4" /> },
+  error: { text: 'Error', color: 'bg-destructive', icon: <TriangleAlert className="size-4" /> },
 };
 
-export function GateControl() {
-  const [entryGateStatus, setEntryGateStatus] = useState<GateStatus>('closed');
-  const [exitGateStatus, setExitGateStatus] = useState<GateStatus>('closed');
-  const [carAtEntry, setCarAtEntry] = useState(false);
-  const [carAtExit, setCarAtExit] = useState(false);
-  const [isPolling, setIsPolling] = useState(false);
-  const [generatedTicketId, setGeneratedTicketId] = useState<string | null>(null);
-  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
-  const { toast } = useToast();
 
-  const pollFailures = useRef({ entry: 0, exit: 0 });
-  const MAX_FAILURES = 3;
+export function GateControl({ gateConfig, isPolling }: { gateConfig: GateConfig, isPolling: boolean}) {
+    const { toast } = useToast();
+    const [gateStatus, setGateStatus] = useState<GateStatus>('closed');
+    const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('checking');
+    const [carAtSensor, setCarAtSensor] = useState(false);
+    const [generatedTicketId, setGeneratedTicketId] = useState<string | null>(null);
+    const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+    const [captureTrigger, setCaptureTrigger] = useState(0);
 
-  const handleGateAction = async (
-    gate: 'entry' | 'exit',
-    action: 'open' | 'close'
-  ) => {
-    const setStatus = gate === 'entry' ? setEntryGateStatus : setExitGateStatus;
-    const currentStatus = gate === 'entry' ? entryGateStatus : exitGateStatus;
+    const pollFailures = useRef(0);
+    const MAX_FAILURES = 3;
+    const prevCarAtSensor = useRef(false);
 
-    if (currentStatus === 'moving') return;
+    const isEntryGate = gateConfig.name.toLowerCase().includes('entry');
 
-    const previousStatus = currentStatus;
-    setStatus('moving');
+    // Auto-capture logic
+    useEffect(() => {
+        if (carAtSensor && !prevCarAtSensor.current) {
+            setCaptureTrigger(Date.now());
+        }
+        prevCarAtSensor.current = carAtSensor;
+    }, [carAtSensor]);
 
-    const settings = gate === 'entry' ? {
-        host: gateSettings.entryGateIp,
-        port: gateSettings.entryGatePort,
-        output: gateSettings.entryGateOutput,
-    } : {
-        host: gateSettings.exitGateIp,
-        port: gateSettings.exitGatePort,
-        output: gateSettings.exitGateOutput,
-    };
+    // Sensor polling logic
+    useEffect(() => {
+        let intervalId: NodeJS.Timeout | null = null;
     
-    const { success, message } = await controlGate({ ...settings, action });
-
-    if (success) {
-        toast({
-            title: `Gate Action: ${gate}`,
-            description: message,
-        });
-        // Simulate gate movement time
-        setTimeout(() => {
-             setStatus(action === 'open' ? 'open' : 'closed');
-        }, 2000);
-    } else {
-        setStatus(previousStatus === 'moving' ? 'error' : previousStatus);
-        toast({
-            variant: 'destructive',
-            title: `Gate Action Failed: ${gate}`,
-            description: message,
-        });
-    }
-  };
-
-  const handleIssueTicket = async () => {
-    const ticketId = `TKT-${Date.now()}`;
-    setGeneratedTicketId(ticketId);
-    try {
-        const url = await QRCode.toDataURL(ticketId);
-        setQrCodeUrl(url);
-    } catch (err) {
-        console.error("Failed to generate QR code:", err);
-        setQrCodeUrl(null);
-        toast({
-            variant: 'destructive',
-            title: 'QR Code Generation Failed',
-            description: 'Could not generate a QR code for the ticket.',
-        });
-    }
-  };
-
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout | null = null;
-
-    const pollSensors = async () => {
-      // Poll entry gate
-      if (pollFailures.current.entry < MAX_FAILURES) {
-        try {
-          const entryResponse = await readGateSensor({ host: gateSettings.entryGateIp, port: gateSettings.entryGatePort });
-          if (entryResponse.success && entryResponse.data) {
-            // According to docs, input is `00000001` where the right-most '1' means switch is active for input 1
-            const isCarPresent = entryResponse.data[8 - gateSettings.entryGateInput] === '1';
-            setCarAtEntry(isCarPresent);
-            pollFailures.current.entry = 0; // Reset on success
-            if (entryGateStatus === 'error') setEntryGateStatus('closed'); // Recover from error state
-          } else {
-             pollFailures.current.entry++;
-          }
-        } catch (error) {
-          pollFailures.current.entry++;
-        }
-        if (pollFailures.current.entry >= MAX_FAILURES) {
-            if(entryGateStatus !== 'moving') setEntryGateStatus('error');
-        }
-      }
-      
-      // Poll exit gate
-       if (pollFailures.current.exit < MAX_FAILURES) {
-        try {
-            const exitResponse = await readGateSensor({ host: gateSettings.exitGateIp, port: gateSettings.exitGatePort });
-            if (exitResponse.success && exitResponse.data) {
-                const isCarPresent = exitResponse.data[8 - gateSettings.exitGateInput] === '1';
-                setCarAtExit(isCarPresent);
-                pollFailures.current.exit = 0; // Reset on success
-                if (exitGateStatus === 'error') setExitGateStatus('closed'); // Recover from error state
-            } else {
-                pollFailures.current.exit++;
+        const pollSensor = async () => {
+          if (pollFailures.current < MAX_FAILURES) {
+            try {
+              const response = await readGateSensor({ host: gateConfig.ip, port: gateConfig.port });
+              if (response.success && response.data) {
+                const isCarPresent = response.data[8 - gateConfig.input] === '1';
+                setCarAtSensor(isCarPresent);
+                setConnectionStatus('online');
+                pollFailures.current = 0; 
+                if (gateStatus === 'error') setGateStatus('closed');
+              } else {
+                 pollFailures.current++;
+              }
+            } catch (error) {
+              pollFailures.current++;
             }
-        } catch (error) {
-            pollFailures.current.exit++;
+            if (pollFailures.current >= MAX_FAILURES) {
+                setConnectionStatus('offline');
+                if(gateStatus !== 'moving') setGateStatus('error');
+            }
+          }
+        };
+        
+        if (isPolling) {
+            setConnectionStatus('checking');
+            pollSensor();
+            intervalId = setInterval(pollSensor, 2000);
+        } else {
+            setConnectionStatus('checking');
+            setCarAtSensor(false);
+            pollFailures.current = 0;
+            if (intervalId) clearInterval(intervalId);
         }
-        if (pollFailures.current.exit >= MAX_FAILURES) {
-            if(exitGateStatus !== 'moving') setExitGateStatus('error');
-        }
-       }
-    };
-    
-    if (isPolling) {
-        pollSensors(); // Run once immediately
-        intervalId = setInterval(pollSensors, 2000); // Then poll every 2 seconds
-    }
-    
-    return () => {
-        if (intervalId) {
-            clearInterval(intervalId);
-        }
-    };
-  }, [isPolling, entryGateStatus, exitGateStatus]);
+        
+        return () => {
+            if (intervalId) clearInterval(intervalId);
+        };
+      }, [isPolling, gateStatus, gateConfig]);
 
 
-  const Gate = ({
-    name,
-    status,
-    carDetected,
-    onOpen,
-    onClose,
-  }: {
-    name: 'Entry' | 'Exit';
-    status: GateStatus;
-    carDetected: boolean;
-    onOpen: () => void;
-    onClose: () => void;
-  }) => {
-    const config = statusConfig[status];
-    const isEntry = name === 'Entry';
-    const isSensorError = status === 'error';
-    const failures = name === 'Entry' ? pollFailures.current.entry : pollFailures.current.exit;
-    const isSensorFailing = failures > 0 && failures < MAX_FAILURES;
+    const handleIssueTicket = async () => {
+        const ticketId = `TKT-${Date.now()}`;
+        setGeneratedTicketId(ticketId);
+        try {
+            const url = await QRCode.toDataURL(ticketId, { width: 256 });
+            setQrCodeUrl(url);
+        } catch (err) {
+            console.error("Failed to generate QR code:", err);
+            setQrCodeUrl(null);
+            toast({
+                variant: 'destructive',
+                title: 'QR Code Generation Failed',
+            });
+        }
+    };
+
+    const handleGateAction = async (action: 'open' | 'close') => {
+        const previousStatus = gateStatus;
+        setGateStatus('moving');
+        
+        const { success, message } = await controlGate({
+            host: gateConfig.ip,
+            port: gateConfig.port,
+            output: gateConfig.output,
+            action,
+        });
+
+        if (success) {
+            toast({
+                title: `${gateConfig.name} Action`,
+                description: message,
+            });
+            setTimeout(() => {
+                setGateStatus(action === 'open' ? 'open' : 'closed');
+            }, 2000);
+        } else {
+            setGateStatus(previousStatus === 'moving' ? 'error' : previousStatus);
+            toast({
+                variant: 'destructive',
+                title: "Gate Action Failed",
+                description: message,
+            });
+        }
+    };
 
 
     return (
-      <div className="rounded-lg border p-4 space-y-4 bg-background">
-        <div className="flex justify-between items-center">
-          <h3 className="font-semibold">{name} Gate</h3>
-           <div className={cn(
-               'flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-full', 
-               isSensorError ? 'bg-destructive text-destructive-foreground' : 
-               carDetected ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'
-            )}>
-                <Car className="size-4" />
-                <span>{ isSensorError ? 'Sensor Error' : carDetected ? 'Car Detected' : 'No Car'}</span>
-            </div>
-          <div
-            className={cn(
-              'flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-full text-white',
-              config.color
-            )}
-          >
-            {config.icon}
-            <span>{config.text}</span>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={onOpen}
-            disabled={status === 'open' || status === 'moving' || status === 'error'}
-            className="w-full"
-            variant="outline"
-          >
-            <ChevronUp className="mr-2 size-4" /> Open
-          </Button>
-          <Button
-            onClick={onClose}
-            disabled={status === 'closed' || status === 'moving' || status === 'error'}
-            className="w-full"
-            variant="outline"
-          >
-            <ChevronDown className="mr-2 size-4" /> Close
-          </Button>
-        </div>
-        <div className="flex gap-2">
-          {isEntry ? (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button className="w-full" variant="secondary" disabled={!carDetected || status === 'error'} onClick={handleIssueTicket}>
-                  <Ticket className="mr-2 size-4" /> Issue Ticket
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Ticket Issued</AlertDialogTitle>
-                   <AlertDialogDescription>
-                    A new parking ticket has been generated. The gate will open after printing.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <div className="flex flex-col items-center justify-center gap-4 py-4">
-                    {qrCodeUrl && <Image src={qrCodeUrl} alt="QR Code" width={200} height={200} />}
-                    <div className="text-center">
-                        <p className="text-sm text-muted-foreground">Ticket ID</p>
-                        <p className="font-mono font-semibold">{generatedTicketId}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card>
+                <CardHeader>
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <CardTitle>{gateConfig.name} Controls</CardTitle>
+                            <CardDescription>Manual controls and status.</CardDescription>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className={cn('flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-full', 
+                                connectionStatus === 'online' ? 'bg-green-100 text-green-800' : 
+                                connectionStatus === 'offline' ? 'bg-destructive text-destructive-foreground' :
+                                'bg-gray-200 text-gray-600'
+                                )}>
+                                {connectionStatus === 'online' && <Wifi className="size-4" />}
+                                {connectionStatus === 'offline' && <WifiOff className="size-4" />}
+                                {connectionStatus === 'checking' && <Loader2 className="size-4 animate-spin" />}
+                                <span className="capitalize">{connectionStatus}</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <AlertDialogFooter>
-                  <AlertDialogAction onClick={() => handleGateAction('entry', 'open')}>Print & Open Gate</AlertDialogAction>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          ) : (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button className="w-full" variant="secondary" disabled={status === 'error'}>
-                  <QrCode className="mr-2 size-4" /> Scan Ticket
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Scan Result</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Ticket validated. Payment of $8.50 confirmed. The gate will open.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogAction>OK</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-        </div>
-      </div>
-    );
-  };
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="flex flex-col items-center justify-center space-y-4">
+                         <div className={cn('flex items-center gap-3 text-lg font-medium px-4 py-2 rounded-full', 
+                            gateStatus === 'error' ? 'bg-destructive text-destructive-foreground' : 
+                            carAtSensor ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'
+                            )}>
+                                <Car className="size-6" />
+                                <span>{ gateStatus === 'error' ? 'Sensor Error' : carAtSensor ? 'Car Detected' : 'No Car Detected'}</span>
+                        </div>
 
-  return (
-    <Card>
-       <CardHeader>
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle>Manual Gate Control</CardTitle>
-            <CardDescription>Manually open or close entry and exit gates.</CardDescription>
-          </div>
-          <ArrowLeftRight className="h-8 w-8 text-primary" />
+                         {isEntryGate ? (
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button className="w-full h-12 text-lg" disabled={!carAtSensor || gateStatus === 'error'} onClick={handleIssueTicket}>
+                                    <Ticket className="mr-2 size-5" /> Issue Manual Ticket
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                    <AlertDialogTitle>Manual Ticket Issued</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        A new parking ticket has been generated. Provide this to the driver. The gate can now be opened.
+                                    </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <div className="flex flex-col items-center justify-center gap-4 py-4">
+                                        {qrCodeUrl ? <Image src={qrCodeUrl} alt="QR Code" width={200} height={200} /> : <Loader2 className="size-8 animate-spin" />}
+                                        <div className="text-center">
+                                            <p className="text-sm text-muted-foreground">Ticket ID</p>
+                                            <p className="font-mono font-semibold text-lg">{generatedTicketId}</p>
+                                        </div>
+                                    </div>
+                                    <AlertDialogFooter>
+                                        <AlertDialogAction onClick={() => handleGateAction('open')}>Open Gate</AlertDialogAction>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        ) : (
+                             <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button className="w-full h-12 text-lg" variant="secondary" disabled={gateStatus === 'error'}>
+                                        <QrCode className="mr-2 size-5" /> Scan Exit Ticket
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                    <AlertDialogTitle>Scan Result (Simulation)</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Ticket validated. Payment of $8.50 confirmed. The gate can now be opened.
+                                    </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogAction onClick={() => handleGateAction('open')}>Open Gate</AlertDialogAction>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        )}
+                    </div>
+                    
+                    <Separator />
+
+                    <div>
+                        <div className="flex justify-between items-center mb-2">
+                            <h3 className="font-semibold">Manual Override</h3>
+                            <div className={cn('flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-full text-white', statusConfig[gateStatus].color)}>
+                                {statusConfig[gateStatus].icon}
+                                <span>{statusConfig[gateStatus].text}</span>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <Button
+                                onClick={() => handleGateAction('open')}
+                                disabled={gateStatus === 'open' || gateStatus === 'moving' || gateStatus === 'error'}
+                                variant="outline"
+                            >
+                                <ChevronUp className="mr-2 size-4" /> Open Gate
+                            </Button>
+                            <Button
+                                onClick={() => handleGateAction('close')}
+                                disabled={gateStatus === 'closed' || gateStatus === 'moving' || gateStatus === 'error'}
+                                variant="outline"
+                            >
+                                <ChevronDown className="mr-2 size-4" /> Close Gate
+                            </Button>
+                        </div>
+                    </div>
+
+                </CardContent>
+            </Card>
+            <CameraFeed gateName={gateConfig.name} captureTrigger={captureTrigger} />
         </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex items-center space-x-2 rounded-lg border p-3 bg-muted/50">
-          <Label htmlFor="sensor-polling">Enable Sensor Polling</Label>
-          <Switch id="sensor-polling" checked={isPolling} onCheckedChange={setIsPolling} />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Gate
-                name="Entry"
-                status={entryGateStatus}
-                carDetected={carAtEntry}
-                onOpen={() => handleGateAction('entry', 'open')}
-                onClose={() => handleGateAction('entry', 'close')}
-                />
-            <Gate
-                name="Exit"
-                status={exitGateStatus}
-                carDetected={carAtExit}
-                onOpen={() => handleGateAction('exit', 'open')}
-                onClose={() => handleGateAction('exit', 'close')}
-                />
-        </div>
-      </CardContent>
-    </Card>
-  );
+    )
 }

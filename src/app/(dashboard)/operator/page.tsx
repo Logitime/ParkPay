@@ -26,8 +26,6 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { CameraFeed } from '@/components/dashboard/CameraFeed';
-
 
 // This would come from settings in a real app
 const entryGateConfig = {
@@ -59,18 +57,9 @@ export default function OperatorPage() {
     const [isPolling, setIsPolling] = useState(true);
     const [generatedTicketId, setGeneratedTicketId] = useState<string | null>(null);
     const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
-    const [captureTrigger, setCaptureTrigger] = useState(0);
-
+    
     const pollFailures = useRef(0);
     const MAX_FAILURES = 3;
-    const prevCarAtEntry = useRef(false);
-
-    useEffect(() => {
-        if (carAtEntry && !prevCarAtEntry.current) {
-            setCaptureTrigger(Date.now());
-        }
-        prevCarAtEntry.current = carAtEntry;
-    }, [carAtEntry]);
 
     useEffect(() => {
         let intervalId: NodeJS.Timeout | null = null;
@@ -161,8 +150,8 @@ export default function OperatorPage() {
     return (
         <div className="flex flex-col h-full">
             <Header title="Gate Operator" />
-            <main className="flex-1 p-4 md:p-6 lg:p-8 grid gap-8 md:grid-cols-2">
-                <Card className="w-full">
+            <main className="flex-1 p-4 md:p-6 lg:p-8 flex justify-center">
+                <Card className="w-full max-w-lg">
                     <CardHeader>
                         <div className="flex items-start justify-between">
                             <div>
@@ -257,7 +246,6 @@ export default function OperatorPage() {
 
                     </CardContent>
                 </Card>
-                <CameraFeed gateName={entryGateConfig.name} captureTrigger={captureTrigger} />
             </main>
         </div>
     )

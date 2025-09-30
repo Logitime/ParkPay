@@ -29,7 +29,7 @@ export function SidebarLinks() {
   const locale = useLocale();
 
   const links = [
-    { href: '/', label: 'dashboard', icon: LayoutDashboard },
+    { href: '/dashboard', label: 'dashboard', icon: LayoutDashboard },
     { href: '/cashier', label: 'cashier', icon: HandCoins },
     { href: '/operator', label: 'operator', icon: Shield },
     { href: '/kiosk', label: 'kiosk', icon: Presentation },
@@ -46,7 +46,9 @@ export function SidebarLinks() {
     const localePrefix = `/${locale}`;
     if (path.startsWith(localePrefix)) {
       const strippedPath = path.substring(localePrefix.length);
-      return strippedPath === '' ? '/' : strippedPath;
+      // Handle the case where the path is just the locale, which should map to the dashboard
+      if (strippedPath === '' || strippedPath === '/dashboard') return '/dashboard';
+      return strippedPath;
     }
     return path;
   };
